@@ -39,7 +39,13 @@ export const toYaml = (data: any, indentLevel = 0): string => {
       return `${indent}${key}:\n${toYaml(value, indentLevel + 1)}`;
     }
 
-    // specific handling for multi-line strings could go here
+    // Support for literal block scalars (|) if the string has newlines
+    if (typeof value === 'string' && value.includes('\n')) {
+      const indentedLines = value.split('\n').map(line => `${indent}  ${line}`).join('\n');
+      return `${indent}${key}: |\n${indentedLines}`;
+    }
+
+    // Basic value handling
     return `${indent}${key}: ${value}`;
   }).filter(line => line.trim() !== '').join('\n');
 };
