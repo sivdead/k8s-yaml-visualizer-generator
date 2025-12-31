@@ -36,6 +36,16 @@ export interface EnvVar {
   };
 }
 
+export interface EnvFromSource {
+  configMapRef?: {
+    name: string;
+  };
+  secretRef?: {
+    name: string;
+  };
+  prefix?: string;
+}
+
 export interface Volume {
   name: string;
   persistentVolumeClaim?: {
@@ -89,6 +99,7 @@ export interface Container {
     limits?: { cpu: string; memory: string };
   };
   env?: Array<EnvVar>;
+  envFrom?: Array<EnvFromSource>;
   volumeMounts?: Array<VolumeMount>;
   lifecycle?: {
     postStart?: LifecycleHandler;

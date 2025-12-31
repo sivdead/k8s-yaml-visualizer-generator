@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type Language = 'en' | 'zh';
@@ -30,17 +29,22 @@ export const translations = {
       ingress: 'Ingress',
       configmap: 'ConfigMap',
       pvc: 'PVC',
-      apiKey: 'Current API Key status',
+      apiKey: 'API Key',
       active: 'Active',
       missing: 'Missing',
+      saved: 'Saved Configurations',
+      noSaved: 'No saved configs yet.',
     },
     header: {
       config: 'Configuration',
-      ai: 'AI Assistant',
       copy: 'Copy',
       copied: 'Copied',
       export: 'Export',
-      preview: 'PREVIEW'
+      preview: 'PREVIEW',
+      save: 'Save',
+      saveTitle: 'Save Current Configuration',
+      configName: 'Configuration Name',
+      saveBtn: 'Save to Local',
     },
     deploy: {
       specs: 'Specifications',
@@ -59,6 +63,12 @@ export const translations = {
       cpu: 'CPU',
       memory: 'Memory',
       envVars: 'Environment Variables',
+      envFrom: 'Env From (Bulk Load)',
+      envSourceType: 'Source Type',
+      envValType: 'Value',
+      envRefType: 'Ref',
+      cmName: 'ConfigMap Name',
+      cmKey: 'Key in CM',
       volumes: 'Volumes Definition',
       mounts: 'Container Mounts',
       security: 'Security & Access',
@@ -80,7 +90,6 @@ export const translations = {
       volName: 'Volume Name',
       resName: 'Resource Name',
       secName: 'Secret Name',
-      cmName: 'ConfigMap Name',
       tempStorage: 'Temporary storage for pod lifetime.',
       noteVolName: "Note: 'Volume Name' must match a volume defined in the section above.",
       alertEnvName: "Please enter an environment variable name.",
@@ -140,14 +149,6 @@ export const translations = {
       accessModes: 'Access Modes',
       note: 'Note: A volume can only be mounted using one access mode at a time, even if it supports many.',
       leaveEmpty: 'Leave empty to use the cluster\'s default StorageClass.'
-    },
-    ai: {
-      title: 'AI Generator',
-      desc: 'Describe your {resource} needs',
-      placeholder: 'e.g., A {resource} for an nginx server using port 80 with 3 replicas...',
-      powered: 'Powered by Gemini 2.5 Flash: The AI will strictly follow Kubernetes schemas to generate a valid configuration.',
-      error: 'Could not generate a valid configuration. Please try again.',
-      apiError: 'Failed to contact Gemini API. Check your API key.'
     }
   },
   zh: {
@@ -176,17 +177,22 @@ export const translations = {
       ingress: 'Ingress',
       configmap: 'ConfigMap',
       pvc: 'PVC',
-      apiKey: 'API Key 状态',
+      apiKey: 'API Key',
       active: '有效',
       missing: '缺失',
+      saved: '已保存的配置',
+      noSaved: '暂无已保存配置',
     },
     header: {
       config: '配置',
-      ai: 'AI 助手',
       copy: '复制',
       copied: '已复制',
       export: '导出',
-      preview: '预览'
+      preview: '预览',
+      save: '保存',
+      saveTitle: '保存当前配置',
+      configName: '配置名称',
+      saveBtn: '保存到本地',
     },
     deploy: {
       specs: '规格 (Specs)',
@@ -205,6 +211,12 @@ export const translations = {
       cpu: 'CPU',
       memory: '内存',
       envVars: '环境变量',
+      envFrom: '环境源 (批量导入)',
+      envSourceType: '源类型',
+      envValType: '值',
+      envRefType: '引用',
+      cmName: 'ConfigMap 名称',
+      cmKey: '键 (Key)',
       volumes: '存储卷定义',
       mounts: '卷挂载',
       security: '安全与权限',
@@ -226,7 +238,6 @@ export const translations = {
       volName: '卷名称',
       resName: '资源名称',
       secName: 'Secret 名称',
-      cmName: 'ConfigMap 名称',
       tempStorage: 'Pod 生命周期内的临时存储。',
       noteVolName: "注意：'卷名称' 必须与上方定义的部分匹配。",
       alertEnvName: "请输入环境变量名称。",
@@ -286,14 +297,6 @@ export const translations = {
       accessModes: '访问模式',
       note: '注意：一个卷一次只能使用一种访问模式挂载，即使它支持多种。',
       leaveEmpty: '留空以使用集群默认的 StorageClass。'
-    },
-    ai: {
-      title: 'AI 生成器',
-      desc: '描述您的 {resource} 需求',
-      placeholder: '例如：一个 {resource}，使用 nginx 镜像，监听 80 端口，3 个副本...',
-      powered: '由 Gemini 2.5 Flash 提供支持：AI 将严格遵循 Kubernetes Schema 生成有效配置。',
-      error: '无法生成有效配置，请重试。',
-      apiError: '连接 Gemini API 失败，请检查 API Key。'
     }
   }
 };
