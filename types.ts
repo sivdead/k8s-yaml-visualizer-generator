@@ -191,8 +191,3 @@ export interface PersistentVolumeClaimResource extends BaseResource {
 }
 
 export type K8sResource = DeploymentResource | ServiceResource | ConfigMapResource | IngressResource | PersistentVolumeClaimResource;
-
-export interface AiResponse {
-  resource: K8sResource;
-  explanation: string;
-}

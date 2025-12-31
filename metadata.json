@@ -1,5 +1,5 @@
 {
   "name": "K8s YAML Visualizer & Generator",
-  "description": "A visual tool to generate Kubernetes YAML manifests using dynamic forms and AI assistance.",
+  "description": "A visual tool to generate Kubernetes YAML manifests using dynamic forms.",
   "requestFramePermissions": []
 }
