@@ -1,5 +1,12 @@
 {
-  "name": "K8s YAML Visualizer & Generator",
-  "description": "A visual tool to generate Kubernetes YAML manifests using dynamic forms.",
-  "requestFramePermissions": []
+  "projectName": "K8s YAML Generator",
+  "domain": "sivd.dev",
+  "subdomain": "k8s",
+  "fullUrl": "https://k8s.sivd.dev",
+  "owner": {
+    "nickname": "sivdead",
+    "name": "Jingwen",
+    "email": "luosivd@gmail.com"
+  },
+  "stack": "React + Vite + Tailwind"
 }
