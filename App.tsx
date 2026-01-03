@@ -365,9 +365,12 @@ const AppContent = () => {
   );
 };
 
+import { Analytics } from '@vercel/analytics/react';
+
 const App = () => (
   <LanguageProvider>
     <AppContent />
+    <Analytics />
   </LanguageProvider>
 );
 
