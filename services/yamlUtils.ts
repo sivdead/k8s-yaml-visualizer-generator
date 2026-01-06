@@ -1,11 +1,22 @@
 
+import yaml from 'js-yaml';
+
+export const parseYaml = (content: string): any => {
+  try {
+    return yaml.load(content);
+  } catch (e) {
+    console.error("Failed to parse YAML", e);
+    throw e;
+  }
+};
+
 // A lightweight custom JSON to YAML serializer to avoid heavy external dependencies for this demo.
 export const toYaml = (data: any, indentLevel = 0): string => {
   const indent = '  '.repeat(indentLevel);
-  
+
   if (data === null) return 'null';
   if (data === undefined) return '';
-  
+
   if (typeof data !== 'object') {
     return String(data);
   }
@@ -24,14 +35,14 @@ export const toYaml = (data: any, indentLevel = 0): string => {
 
   return keys.map(key => {
     const value = data[key];
-    
+
     if (value === undefined) return '';
 
     if (Array.isArray(value)) {
-       if (value.length === 0) {
-           return `${indent}${key}: []`;
-       }
-       return `${indent}${key}:\n${toYaml(value, indentLevel)}`;
+      if (value.length === 0) {
+        return `${indent}${key}: []`;
+      }
+      return `${indent}${key}:\n${toYaml(value, indentLevel)}`;
     }
 
     if (typeof value === 'object' && value !== null) {
@@ -52,7 +63,7 @@ export const toYaml = (data: any, indentLevel = 0): string => {
 
 export const downloadYaml = (filename: string, content: string) => {
   const element = document.createElement('a');
-  const file = new Blob([content], {type: 'text/yaml'});
+  const file = new Blob([content], { type: 'text/yaml' });
   element.href = URL.createObjectURL(file);
   element.download = filename;
   document.body.appendChild(element);
