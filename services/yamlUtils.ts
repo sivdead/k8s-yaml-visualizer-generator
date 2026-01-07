@@ -10,8 +10,37 @@ export const parseYaml = (content: string): any => {
   }
 };
 
-// A lightweight custom JSON to YAML serializer to avoid heavy external dependencies for this demo.
+// Helper: Custom serialization wrapper to handle special logic (like Secret encoding)
 export const toYaml = (data: any, indentLevel = 0): string => {
+  // Clone data to avoid mutating state
+  let dataToProcess = null;
+  try {
+    dataToProcess = JSON.parse(JSON.stringify(data));
+  } catch (e) {
+    dataToProcess = data;
+  }
+
+  // Special handling for Secret: Base64 encode values in 'data'
+  if (dataToProcess && dataToProcess.kind === 'Secret' && dataToProcess.data) {
+    const keys = Object.keys(dataToProcess.data);
+    keys.forEach(k => {
+      // Check if already looks like base64? No, assume state is PLAIN TEXT per plan.
+      // Is it simple string?
+      if (typeof dataToProcess.data[k] === 'string') {
+        try {
+          // btoa needs binary string
+          dataToProcess.data[k] = btoa(dataToProcess.data[k]);
+        } catch (e) {
+          // ignore if fails
+        }
+      }
+    });
+  }
+
+  return recursiveToYaml(dataToProcess, indentLevel);
+}
+
+const recursiveToYaml = (data: any, indentLevel = 0): string => {
   const indent = '  '.repeat(indentLevel);
 
   if (data === null) return 'null';
@@ -24,7 +53,7 @@ export const toYaml = (data: any, indentLevel = 0): string => {
   if (Array.isArray(data)) {
     if (data.length === 0) return '[]';
     return data.map(item => {
-      const itemYaml = toYaml(item, indentLevel + 1).trimStart();
+      const itemYaml = recursiveToYaml(item, indentLevel + 1).trimStart();
       return `${indent}- ${itemYaml}`;
     }).join('\n');
   }
@@ -42,12 +71,12 @@ export const toYaml = (data: any, indentLevel = 0): string => {
       if (value.length === 0) {
         return `${indent}${key}: []`;
       }
-      return `${indent}${key}:\n${toYaml(value, indentLevel)}`;
+      return `${indent}${key}:\n${recursiveToYaml(value, indentLevel)}`;
     }
 
     if (typeof value === 'object' && value !== null) {
       if (Object.keys(value).length === 0) return `${indent}${key}: {}`;
-      return `${indent}${key}:\n${toYaml(value, indentLevel + 1)}`;
+      return `${indent}${key}:\n${recursiveToYaml(value, indentLevel + 1)}`;
     }
 
     // Support for literal block scalars (|) if the string has newlines

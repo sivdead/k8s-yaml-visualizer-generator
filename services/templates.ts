@@ -1,5 +1,6 @@
 
-import { DeploymentResource, ServiceResource, ConfigMapResource, IngressResource, PersistentVolumeClaimResource } from '../types';
+
+import { DeploymentResource, ServiceResource, ConfigMapResource, IngressResource, PersistentVolumeClaimResource, SecretResource, CronJobResource } from '../types';
 
 export const defaultDeployment: DeploymentResource = {
   apiVersion: 'apps/v1',
@@ -123,5 +124,48 @@ export const defaultPVC: PersistentVolumeClaimResource = {
     },
     storageClassName: 'standard',
     volumeMode: 'Filesystem'
+  }
+};
+
+export const defaultSecret: SecretResource = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'my-secret',
+    namespace: 'default'
+  },
+  type: 'Opaque',
+  data: {
+    "api-key": "secret-value"
+  }
+};
+
+export const defaultCronJob: CronJobResource = {
+  apiVersion: 'batch/v1',
+  kind: 'CronJob',
+  metadata: {
+    name: 'my-cronjob',
+    namespace: 'default',
+    labels: { app: 'my-cronjob' }
+  },
+  spec: {
+    schedule: '*/5 * * * *',
+    jobTemplate: {
+      spec: {
+        template: {
+          spec: {
+            containers: [
+              {
+                name: 'my-cronjob-container',
+                image: 'busybox',
+                imagePullPolicy: 'IfNotPresent',
+                command: ['/bin/sh', '-c', 'date; echo Hello from the Kubernetes cluster']
+              }
+            ],
+            restartPolicy: 'OnFailure'
+          }
+        }
+      }
+    }
   }
 };

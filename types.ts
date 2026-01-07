@@ -1,5 +1,5 @@
 
-export type ResourceType = 'deployment' | 'service' | 'configmap' | 'ingress' | 'pvc';
+export type ResourceType = 'deployment' | 'service' | 'configmap' | 'ingress' | 'pvc' | 'secret' | 'cronjob';
 
 export interface BaseResource {
   apiVersion: string;
@@ -190,4 +190,31 @@ export interface PersistentVolumeClaimResource extends BaseResource {
   };
 }
 
-export type K8sResource = DeploymentResource | ServiceResource | ConfigMapResource | IngressResource | PersistentVolumeClaimResource;
+export interface SecretResource extends BaseResource {
+  kind: 'Secret';
+  type: string; // e.g. Opaque
+  data: Record<string, string>;
+  stringData?: Record<string, string>; // We might just use data in our internal state for simplicity, or handle both.
+}
+
+export interface JobTemplateSpec {
+  spec: {
+    template: {
+      spec: {
+        containers: Array<Container>;
+        restartPolicy: string;
+        imagePullSecrets?: Array<{ name: string }>;
+      };
+    };
+  };
+}
+
+export interface CronJobResource extends BaseResource {
+  kind: 'CronJob';
+  spec: {
+    schedule: string; // e.g. "*/5 * * * *"
+    jobTemplate: JobTemplateSpec;
+  };
+}
+
+export type K8sResource = DeploymentResource | ServiceResource | ConfigMapResource | IngressResource | PersistentVolumeClaimResource | SecretResource | CronJobResource;

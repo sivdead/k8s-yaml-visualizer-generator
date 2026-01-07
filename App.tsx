@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toYaml, downloadYaml, parseYaml } from './services/yamlUtils';
-import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC } from './services/templates';
+import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob } from './services/templates';
 import { ResourceType, K8sResource } from './types';
 import { DeploymentForm } from './components/forms/DeploymentForm';
 import { ServiceForm } from './components/forms/ServiceForm';
 import { ConfigMapForm } from './components/forms/ConfigMapForm';
 import { IngressForm } from './components/forms/IngressForm';
 import { PVCForm } from './components/forms/PVCForm';
+import { SecretForm } from './components/forms/SecretForm';
+import { CronJobForm } from './components/forms/CronJobForm';
 import { ImportModal } from './components/modals/ImportModal';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import {
@@ -24,7 +26,9 @@ import {
   Trash2,
   FolderOpen,
   X,
-  Upload
+  Upload,
+  Key,
+  Clock
 } from 'lucide-react';
 
 interface SavedConfig {
@@ -129,6 +133,8 @@ const AppContent = () => {
       case 'configmap': setFormData(defaultConfigMap); break;
       case 'ingress': setFormData(defaultIngress); break;
       case 'pvc': setFormData(defaultPVC); break;
+      case 'secret': setFormData(defaultSecret); break;
+      case 'cronjob': setFormData(defaultCronJob); break;
     }
   };
 
@@ -172,7 +178,9 @@ const AppContent = () => {
       'Service': 'service',
       'ConfigMap': 'configmap',
       'Ingress': 'ingress',
-      'PersistentVolumeClaim': 'pvc'
+      'PersistentVolumeClaim': 'pvc',
+      'Secret': 'secret',
+      'CronJob': 'cronjob'
     };
 
     const type = kindMap[parsed.kind];
@@ -193,8 +201,8 @@ const AppContent = () => {
     <button
       onClick={() => handleTypeChange(type)}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${resourceType === type
-          ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+        ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
         }`}
     >
       <Icon size={18} />
@@ -227,6 +235,8 @@ const AppContent = () => {
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2 mt-6">{t.nav.config}</div>
           <NavItem type="configmap" label={t.nav.configmap} icon={FileText} />
           <NavItem type="pvc" label={t.nav.pvc} icon={HardDrive} />
+          <NavItem type="secret" label="Secret" icon={Key} />
+          <NavItem type="cronjob" label="CronJob" icon={Clock} />
 
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2 mt-8 flex items-center gap-2">
             <FolderOpen size={14} /> {t.nav.saved}
@@ -329,6 +339,8 @@ const AppContent = () => {
               {resourceType === 'configmap' && <ConfigMapForm data={formData as any} onChange={setFormData} />}
               {resourceType === 'ingress' && <IngressForm data={formData as any} onChange={setFormData} />}
               {resourceType === 'pvc' && <PVCForm data={formData as any} onChange={setFormData} />}
+              {resourceType === 'secret' && <SecretForm data={formData as any} onChange={setFormData} />}
+              {resourceType === 'cronjob' && <CronJobForm data={formData as any} onChange={setFormData} />}
             </div>
           </div>
 
