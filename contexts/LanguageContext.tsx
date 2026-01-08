@@ -152,6 +152,23 @@ export const translations = {
       accessModes: 'Access Modes',
       note: 'Note: A volume can only be mounted using one access mode at a time, even if it supports many.',
       leaveEmpty: 'Leave empty to use the cluster\'s default StorageClass.'
+    },
+    validation: {
+      title: 'K8s Spec Validation',
+      passed: 'Validation Passed',
+      errors: 'error(s)',
+      warnings: 'warning(s)',
+      // Best practice warnings
+      missingLabels: 'Consider adding labels for better resource management',
+      missingAppLabel: 'Consider adding "app" or "app.kubernetes.io/name" label',
+      missingLimits: 'Container "{name}" has no resource limits set, may cause resource contention',
+      missingRequests: 'Container "{name}" has no resource requests set, may affect scheduling',
+      missingProbes: 'Container "{name}" has no health check probes configured',
+      latestTag: 'Container "{name}" uses :latest or no image tag, use specific version recommended',
+      singleReplica: 'Single replica deployment lacks high availability, recommend replicas >= 2 for production',
+      loadBalancerCost: 'LoadBalancer type may incur cloud service costs',
+      missingIngressClass: 'Consider specifying ingressClassName to clarify which Ingress controller to use',
+      unknownKind: 'Unknown resource type: {kind}'
     }
   },
   zh: {
@@ -303,6 +320,23 @@ export const translations = {
       accessModes: '访问模式',
       note: '注意：一个卷一次只能使用一种访问模式挂载，即使它支持多种。',
       leaveEmpty: '留空以使用集群默认的 StorageClass。'
+    },
+    validation: {
+      title: 'K8s 规范校验',
+      passed: '校验通过',
+      errors: '个错误',
+      warnings: '个警告',
+      // Best practice warnings
+      missingLabels: '建议添加 labels 以便于资源管理和选择',
+      missingAppLabel: '建议添加 "app" 或 "app.kubernetes.io/name" 标签',
+      missingLimits: '容器 "{name}" 未设置资源上限 (limits)，可能导致资源争用',
+      missingRequests: '容器 "{name}" 未设置资源请求 (requests)，可能影响调度',
+      missingProbes: '容器 "{name}" 未配置健康检查探针',
+      latestTag: '容器 "{name}" 使用了 :latest 或未指定镜像标签，建议使用具体版本',
+      singleReplica: '单副本部署无法保证高可用，生产环境建议设置 replicas >= 2',
+      loadBalancerCost: 'LoadBalancer 类型可能产生云服务费用',
+      missingIngressClass: '建议指定 ingressClassName 以明确使用的 Ingress 控制器',
+      unknownKind: '未知的资源类型: {kind}'
     }
   }
 };

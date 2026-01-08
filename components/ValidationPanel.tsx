@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { AlertCircle, AlertTriangle, CheckCircle, Shield } from 'lucide-react';
-import { validateK8sResource, ValidationResult } from '../services/k8sValidator';
+import { validateK8sResource, ValidationResult, ValidationError } from '../services/k8sValidator';
 import { K8sResource } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -10,20 +10,43 @@ interface ValidationPanelProps {
 }
 
 /**
+ * 获取翻译后的消息
+ */
+const getLocalizedMessage = (
+    error: ValidationError,
+    validationT: Record<string, string>
+): string => {
+    // 如果有 messageKey，使用翻译
+    if (error.messageKey && validationT[error.messageKey]) {
+        let message = validationT[error.messageKey];
+        // 替换参数占位符
+        if (error.messageParams) {
+            Object.entries(error.messageParams).forEach(([key, value]) => {
+                message = message.replace(`{${key}}`, value);
+            });
+        }
+        return message;
+    }
+    // 否则使用原始消息（如 Zod 验证错误）
+    return error.message;
+};
+
+/**
  * K8s 规范校验面板
  */
 export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, showDetails = true }) => {
-    const { language } = useLanguage();
+    const { t } = useLanguage();
+    const validationT = (t as any).validation || {};
 
     const validation = useMemo(() => validateK8sResource(resource), [resource]);
 
     const { valid, errors, warnings } = validation;
 
-    // 标题文本
-    const titleText = language === 'zh' ? 'K8s 规范校验' : 'K8s Spec Validation';
-    const validText = language === 'zh' ? '校验通过' : 'Validation Passed';
-    const errorText = language === 'zh' ? '个错误' : ' error(s)';
-    const warningText = language === 'zh' ? '个警告' : ' warning(s)';
+    // 翻译后的标签
+    const titleText = validationT.title || 'K8s Spec Validation';
+    const validText = validationT.passed || 'Validation Passed';
+    const errorText = validationT.errors || 'error(s)';
+    const warningText = validationT.warnings || 'warning(s)';
 
     if (!showDetails) {
         // 简洁模式：只显示状态图标
@@ -40,8 +63,8 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                 )}
                 <span className="text-xs text-slate-500">
                     {valid
-                        ? (warnings.length > 0 ? `${warnings.length}${warningText}` : validText)
-                        : `${errors.length}${errorText}`
+                        ? (warnings.length > 0 ? `${warnings.length} ${warningText}` : validText)
+                        : `${errors.length} ${errorText}`
                     }
                 </span>
             </div>
@@ -69,13 +92,13 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                     {errors.length > 0 && (
                         <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
                             <AlertCircle size={12} />
-                            {errors.length}{errorText}
+                            {errors.length} {errorText}
                         </span>
                     )}
                     {warnings.length > 0 && (
                         <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                             <AlertTriangle size={12} />
-                            {warnings.length}{warningText}
+                            {warnings.length} {warningText}
                         </span>
                     )}
                     {errors.length === 0 && warnings.length === 0 && (
@@ -102,7 +125,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                                         {err.path}
                                     </code>
                                     <p className="text-sm text-slate-700 dark:text-slate-300">
-                                        {err.message}
+                                        {getLocalizedMessage(err, validationT)}
                                     </p>
                                 </div>
                             </div>
@@ -120,7 +143,7 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                                         {warn.path}
                                     </code>
                                     <p className="text-sm text-slate-700 dark:text-slate-300">
-                                        {warn.message}
+                                        {getLocalizedMessage(warn, validationT)}
                                     </p>
                                 </div>
                             </div>

@@ -13,6 +13,8 @@ import { K8sResource, ResourceType } from '../types';
 export interface ValidationError {
     path: string;
     message: string;
+    messageKey?: string;  // For i18n lookup
+    messageParams?: Record<string, string>;  // For message interpolation
     severity: 'error' | 'warning';
 }
 
@@ -47,7 +49,7 @@ const getSchemaForKind = (kind: string): z.ZodType | null => {
 };
 
 /**
- * K8s 最佳实践检查
+ * K8s 最佳实践检查 - 返回带有 messageKey 的警告
  */
 const checkBestPractices = (resource: K8sResource): ValidationError[] => {
     const warnings: ValidationError[] = [];
@@ -56,7 +58,8 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
     if (!resource.metadata.labels || Object.keys(resource.metadata.labels).length === 0) {
         warnings.push({
             path: 'metadata.labels',
-            message: '建议添加 labels 以便于资源管理和选择',
+            message: '',  // Will be filled by UI using messageKey
+            messageKey: 'missingLabels',
             severity: 'warning',
         });
     }
@@ -66,7 +69,8 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
     if (!labels['app'] && !labels['app.kubernetes.io/name']) {
         warnings.push({
             path: 'metadata.labels',
-            message: '建议添加 "app" 或 "app.kubernetes.io/name" 标签',
+            message: '',
+            messageKey: 'missingAppLabel',
             severity: 'warning',
         });
     }
@@ -81,14 +85,18 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
             if (!container.resources?.limits) {
                 warnings.push({
                     path: `spec.template.spec.containers[${idx}].resources.limits`,
-                    message: `容器 "${container.name}" 未设置资源上限 (limits)，可能导致资源争用`,
+                    message: '',
+                    messageKey: 'missingLimits',
+                    messageParams: { name: container.name },
                     severity: 'warning',
                 });
             }
             if (!container.resources?.requests) {
                 warnings.push({
                     path: `spec.template.spec.containers[${idx}].resources.requests`,
-                    message: `容器 "${container.name}" 未设置资源请求 (requests)，可能影响调度`,
+                    message: '',
+                    messageKey: 'missingRequests',
+                    messageParams: { name: container.name },
                     severity: 'warning',
                 });
             }
@@ -97,7 +105,9 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
             if (!container.livenessProbe && !container.readinessProbe) {
                 warnings.push({
                     path: `spec.template.spec.containers[${idx}]`,
-                    message: `容器 "${container.name}" 未配置健康检查探针`,
+                    message: '',
+                    messageKey: 'missingProbes',
+                    messageParams: { name: container.name },
                     severity: 'warning',
                 });
             }
@@ -106,7 +116,9 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
             if (container.image && (container.image.endsWith(':latest') || !container.image.includes(':'))) {
                 warnings.push({
                     path: `spec.template.spec.containers[${idx}].image`,
-                    message: `容器 "${container.name}" 使用了 :latest 或未指定镜像标签，建议使用具体版本`,
+                    message: '',
+                    messageKey: 'latestTag',
+                    messageParams: { name: container.name },
                     severity: 'warning',
                 });
             }
@@ -116,7 +128,8 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
         if (deployment.spec?.replicas === 1) {
             warnings.push({
                 path: 'spec.replicas',
-                message: '单副本部署无法保证高可用，生产环境建议设置 replicas >= 2',
+                message: '',
+                messageKey: 'singleReplica',
                 severity: 'warning',
             });
         }
@@ -128,7 +141,8 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
         if (service.spec?.type === 'LoadBalancer') {
             warnings.push({
                 path: 'spec.type',
-                message: 'LoadBalancer 类型可能产生云服务费用',
+                message: '',
+                messageKey: 'loadBalancerCost',
                 severity: 'warning',
             });
         }
@@ -140,7 +154,8 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
         if (!ingress.spec?.ingressClassName) {
             warnings.push({
                 path: 'spec.ingressClassName',
-                message: '建议指定 ingressClassName 以明确使用的 Ingress 控制器',
+                message: '',
+                messageKey: 'missingIngressClass',
                 severity: 'warning',
             });
         }
@@ -165,7 +180,9 @@ export const validateK8sResource = (resource: K8sResource): ValidationResult => 
             errors: [],
             warnings: [{
                 path: 'kind',
-                message: `未知的资源类型: ${resource.kind}`,
+                message: '',
+                messageKey: 'unknownKind',
+                messageParams: { kind: resource.kind },
                 severity: 'warning',
             }],
         };
@@ -178,7 +195,7 @@ export const validateK8sResource = (resource: K8sResource): ValidationResult => 
         result.error.issues.forEach((issue) => {
             errors.push({
                 path: issue.path.join('.'),
-                message: issue.message,
+                message: issue.message,  // Zod messages are kept as-is for now
                 severity: 'error',
             });
         });
