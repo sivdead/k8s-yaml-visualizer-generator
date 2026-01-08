@@ -20,6 +20,18 @@ export const toYaml = (data: any, indentLevel = 0): string => {
     dataToProcess = data;
   }
 
+  // Extract and remove _comment before processing
+  let commentLines = '';
+  if (dataToProcess && dataToProcess._comment) {
+    const comment = dataToProcess._comment;
+    // Split by newlines and prepend # to each line
+    commentLines = comment
+      .split('\n')
+      .map((line: string) => `# ${line}`)
+      .join('\n') + '\n';
+    delete dataToProcess._comment;
+  }
+
   // Special handling for Secret: Base64 encode values in 'data'
   if (dataToProcess && dataToProcess.kind === 'Secret' && dataToProcess.data) {
     const keys = Object.keys(dataToProcess.data);
@@ -37,7 +49,7 @@ export const toYaml = (data: any, indentLevel = 0): string => {
     });
   }
 
-  return recursiveToYaml(dataToProcess, indentLevel);
+  return commentLines + recursiveToYaml(dataToProcess, indentLevel);
 }
 
 const recursiveToYaml = (data: any, indentLevel = 0): string => {

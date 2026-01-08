@@ -10,6 +10,8 @@ export interface BaseResource {
     labels?: Record<string, string>;
     annotations?: Record<string, string>;
   };
+  /** 用户添加的注释，将在 YAML 顶部以 # 开头显示 */
+  _comment?: string;
 }
 
 export interface LifecycleHandler {

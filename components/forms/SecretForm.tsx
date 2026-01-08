@@ -2,6 +2,7 @@ import React from 'react';
 import { SecretResource } from '../../types';
 import { Key, Plus, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CommentSection } from './shared/CommentSection';
 
 interface Props {
     data: SecretResource;
@@ -43,6 +44,10 @@ export const SecretForm: React.FC<Props> = ({ data, onChange }) => {
 
     return (
         <div className="space-y-6">
+            <CommentSection
+                value={data._comment}
+                onChange={(comment) => onChange({ ...data, _comment: comment })}
+            />
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 flex items-center gap-2">
                     <Key size={20} className="text-blue-500" />

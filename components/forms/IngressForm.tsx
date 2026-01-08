@@ -4,6 +4,7 @@ import { IngressResource } from '../../types';
 import { Input, Label, Select, SectionTitle } from '../FormComponents';
 import { Globe, Trash2, Plus, Route, Server, Tag } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CommentSection } from './shared/CommentSection';
 
 interface Props {
   data: IngressResource;
@@ -19,7 +20,7 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
     if (data.metadata.annotations) {
       setAnnotations(Object.entries(data.metadata.annotations).map(([key, value]) => ({ key, value })));
     } else {
-        setAnnotations([]);
+      setAnnotations([]);
     }
   }, [data.metadata.annotations]);
 
@@ -126,27 +127,31 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
     } else {
       (pathItem as any)[field] = value;
     }
-    
+
     updateSpec('rules', newRules);
   };
 
 
   return (
     <div className="space-y-6">
+      <CommentSection
+        value={data._comment}
+        onChange={(comment) => onChange({ ...data, _comment: comment })}
+      />
       <SectionTitle title={t.common.metadata} icon={<Globe size={20} />} />
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>{t.common.name}</Label>
-          <Input 
-            value={data.metadata.name} 
-            onChange={(e) => updateMeta('name', e.target.value)} 
+          <Input
+            value={data.metadata.name}
+            onChange={(e) => updateMeta('name', e.target.value)}
           />
         </div>
         <div>
           <Label>{t.common.namespace}</Label>
-          <Input 
-            value={data.metadata.namespace} 
-            onChange={(e) => updateMeta('namespace', e.target.value)} 
+          <Input
+            value={data.metadata.namespace}
+            onChange={(e) => updateMeta('namespace', e.target.value)}
           />
         </div>
       </div>
@@ -157,17 +162,17 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
         <div className="space-y-2 mt-2">
           {annotations.map((annot, idx) => (
             <div key={idx} className="flex gap-2 items-center">
-              <Input 
+              <Input
                 placeholder="nginx.ingress.kubernetes.io/rewrite-target"
                 value={annot.key}
                 onChange={(e) => changeAnnotation(idx, 'key', e.target.value)}
               />
-              <Input 
+              <Input
                 placeholder="/"
                 value={annot.value}
                 onChange={(e) => changeAnnotation(idx, 'value', e.target.value)}
               />
-               <button 
+              <button
                 type="button"
                 onClick={() => removeAnnotation(idx)}
                 className="p-2 text-slate-400 hover:text-red-500 transition-colors"
@@ -176,7 +181,7 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
               </button>
             </div>
           ))}
-          <button 
+          <button
             type="button"
             onClick={addAnnotation}
             className="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1 mt-1"
@@ -187,12 +192,12 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
       </div>
 
       <SectionTitle title={t.ingress.controller} icon={<Server size={20} />} />
-      
+
       <div>
         <Label>{t.ingress.className}</Label>
-        <Input 
-          value={data.spec.ingressClassName || ''} 
-          onChange={(e) => updateSpec('ingressClassName', e.target.value)} 
+        <Input
+          value={data.spec.ingressClassName || ''}
+          onChange={(e) => updateSpec('ingressClassName', e.target.value)}
           placeholder="nginx"
         />
         <p className="text-xs text-slate-500 mt-1">
@@ -206,61 +211,61 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
         {data.spec.rules.map((rule, rIdx) => (
           <div key={rIdx} className="border border-slate-200 rounded-lg overflow-hidden">
             <div className="bg-slate-100 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
-               <div className="flex-1 mr-4">
-                 <Label>{t.ingress.host}</Label>
-                 <Input 
-                    value={rule.host} 
-                    onChange={(e) => updateRuleHost(rIdx, e.target.value)}
-                    placeholder="example.com"
-                 />
-               </div>
-               <button 
-                  type="button"
-                  onClick={() => removeRule(rIdx)}
-                  className="text-red-500 hover:bg-red-50 p-2 rounded"
-               >
-                 <Trash2 size={16} />
-               </button>
+              <div className="flex-1 mr-4">
+                <Label>{t.ingress.host}</Label>
+                <Input
+                  value={rule.host}
+                  onChange={(e) => updateRuleHost(rIdx, e.target.value)}
+                  placeholder="example.com"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => removeRule(rIdx)}
+                className="text-red-500 hover:bg-red-50 p-2 rounded"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
-            
+
             <div className="p-4 bg-slate-50 space-y-3">
               {rule.http.paths.map((path, pIdx) => (
                 <div key={pIdx} className="grid grid-cols-12 gap-2 items-end bg-white p-3 rounded shadow-sm border border-slate-100">
                   <div className="col-span-3">
                     <Label>{t.ingress.path}</Label>
-                    <Input 
+                    <Input
                       value={path.path}
                       onChange={(e) => updatePath(rIdx, pIdx, 'path', e.target.value)}
                     />
                   </div>
                   <div className="col-span-3">
-                     <Label>{t.ingress.pathType}</Label>
-                     <Select
-                        value={path.pathType}
-                        onChange={(e) => updatePath(rIdx, pIdx, 'pathType', e.target.value)}
-                     >
-                       <option value="Prefix">Prefix</option>
-                       <option value="Exact">Exact</option>
-                       <option value="ImplementationSpecific">ImplSpecific</option>
-                     </Select>
+                    <Label>{t.ingress.pathType}</Label>
+                    <Select
+                      value={path.pathType}
+                      onChange={(e) => updatePath(rIdx, pIdx, 'pathType', e.target.value)}
+                    >
+                      <option value="Prefix">Prefix</option>
+                      <option value="Exact">Exact</option>
+                      <option value="ImplementationSpecific">ImplSpecific</option>
+                    </Select>
                   </div>
                   <div className="col-span-3">
                     <Label>{t.ingress.serviceName}</Label>
-                    <Input 
+                    <Input
                       value={path.backend.service.name}
                       onChange={(e) => updatePath(rIdx, pIdx, 'serviceName', e.target.value)}
                     />
                   </div>
                   <div className="col-span-2">
                     <Label>{t.common.port}</Label>
-                    <Input 
+                    <Input
                       type="number"
                       value={path.backend.service.port.number}
                       onChange={(e) => updatePath(rIdx, pIdx, 'servicePort', e.target.value)}
                     />
                   </div>
                   <div className="col-span-1 flex justify-center pb-2">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => removePath(rIdx, pIdx)}
                       className="text-slate-400 hover:text-red-500"
@@ -270,18 +275,18 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
                   </div>
                 </div>
               ))}
-               <button 
-                  type="button"
-                  onClick={() => addPath(rIdx)}
-                  className="w-full py-2 border border-dashed border-slate-300 rounded text-sm text-slate-500 hover:border-blue-500 hover:text-blue-600 flex items-center justify-center gap-1"
-                >
-                  <Plus size={14} /> {t.ingress.addPath}
-                </button>
+              <button
+                type="button"
+                onClick={() => addPath(rIdx)}
+                className="w-full py-2 border border-dashed border-slate-300 rounded text-sm text-slate-500 hover:border-blue-500 hover:text-blue-600 flex items-center justify-center gap-1"
+              >
+                <Plus size={14} /> {t.ingress.addPath}
+              </button>
             </div>
           </div>
         ))}
 
-        <button 
+        <button
           type="button"
           onClick={addRule}
           className="px-4 py-2 bg-slate-800 text-white rounded-md hover:bg-slate-700 text-sm font-medium flex items-center gap-2"

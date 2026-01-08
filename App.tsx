@@ -14,6 +14,7 @@ import { CronJobForm } from './components/forms/CronJobForm';
 import { ImportModal } from './components/modals/ImportModal';
 import { ExportModal } from './components/modals/ExportModal';
 import { YamlPreview } from './components/YamlPreview';
+import { ValidationPanel } from './components/ValidationPanel';
 import { ToastContainer } from './components/ToastContainer';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AppContextProvider, useTheme, useToast } from './contexts/AppContext';
@@ -371,13 +372,20 @@ const AppContent = () => {
 
           {/* Preview Area */}
           <div
-            className="flex-shrink-0"
+            className={`flex-shrink-0 flex flex-col overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}
             style={{ width: isDesktop ? previewWidth : '100%' }}
           >
-            <YamlPreview
-              code={yamlOutput}
-              filename={`${formData.metadata.name}.yaml`}
-            />
+            {/* Validation Panel */}
+            <div className="flex-shrink-0 p-3 border-b border-slate-200 dark:border-slate-700">
+              <ValidationPanel resource={formData} showDetails={true} />
+            </div>
+            {/* YAML Preview */}
+            <div className="flex-1 overflow-hidden">
+              <YamlPreview
+                code={yamlOutput}
+                filename={`${formData.metadata.name}.yaml`}
+              />
+            </div>
           </div>
         </div>
       </main>

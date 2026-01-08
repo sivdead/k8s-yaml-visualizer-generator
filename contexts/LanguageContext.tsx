@@ -19,6 +19,9 @@ export const translations = {
       protocol: 'Protocol',
       selectOrType: 'Select or type...',
       requiredName: 'Please enter a name.',
+      comment: 'Notes / Comments',
+      commentPlaceholder: 'Add notes that will appear at the top of the YAML file...',
+      commentHint: 'Comments will be displayed with # at the top of the generated YAML',
     },
     nav: {
       workloads: 'Workloads',
@@ -167,6 +170,9 @@ export const translations = {
       protocol: '协议',
       selectOrType: '选择或输入...',
       requiredName: '请输入名称。',
+      comment: '备注/注释',
+      commentPlaceholder: '添加注释说明，将显示在 YAML 文件顶部...',
+      commentHint: '注释内容将以 # 开头显示在生成的 YAML 文件顶部',
     },
     nav: {
       workloads: '工作负载',

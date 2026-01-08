@@ -6,6 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/AppContext';
 import { useFormValidation, validators } from '../../hooks/useFormValidation';
 import { FormField, ValidatedInput } from './shared/FormField';
+import { CommentSection } from './shared/CommentSection';
 import { ContainerSection } from './ContainerSection';
 
 interface Props {
@@ -217,6 +218,10 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
 
   return (
     <div className="space-y-2">
+      <CommentSection
+        value={data._comment}
+        onChange={(comment) => onChange({ ...data, _comment: comment })}
+      />
       <CollapsibleSection title={t.common.metadata} icon={<Box size={20} />} defaultOpen={true}>
         <div className="grid grid-cols-2 gap-4">
           <FormField label={t.common.name} error={getError('name')} required>

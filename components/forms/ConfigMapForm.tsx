@@ -4,6 +4,7 @@ import { ConfigMapResource } from '../../types';
 import { Input, Label, SectionTitle } from '../FormComponents';
 import { FileText, Plus, Trash2, Box } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CommentSection } from './shared/CommentSection';
 
 interface Props {
   data: ConfigMapResource;
@@ -60,20 +61,24 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
 
   return (
     <div className="space-y-6">
+      <CommentSection
+        value={data._comment}
+        onChange={(comment) => onChange({ ...data, _comment: comment })}
+      />
       <SectionTitle title={t.common.metadata} icon={<Box size={20} />} />
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>{t.common.name}</Label>
-          <Input 
-            value={data.metadata.name} 
-            onChange={(e) => updateMeta('name', e.target.value)} 
+          <Input
+            value={data.metadata.name}
+            onChange={(e) => updateMeta('name', e.target.value)}
           />
         </div>
         <div>
           <Label>{t.common.namespace}</Label>
-          <Input 
-            value={data.metadata.namespace} 
-            onChange={(e) => updateMeta('namespace', e.target.value)} 
+          <Input
+            value={data.metadata.namespace}
+            onChange={(e) => updateMeta('namespace', e.target.value)}
           />
         </div>
       </div>
@@ -82,7 +87,7 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
       <div className="space-y-4">
         {entries.map((entry, idx) => (
           <div key={idx} className="p-4 bg-slate-50 rounded-lg border border-slate-200 relative group">
-            <button 
+            <button
               onClick={() => removeEntry(idx)}
               className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 transition-colors"
             >
@@ -91,7 +96,7 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-3">
               <div>
                 <Label>{t.configmap.filename}</Label>
-                <Input 
+                <Input
                   value={entry.key}
                   onChange={(e) => updateEntry(idx, 'key', e.target.value)}
                   placeholder="config.json"
@@ -110,7 +115,7 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
           </div>
         ))}
 
-        <button 
+        <button
           onClick={addEntry}
           className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 font-medium"
         >

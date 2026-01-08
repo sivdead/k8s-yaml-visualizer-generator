@@ -2,6 +2,7 @@ import React from 'react';
 import { CronJobResource } from '../../types';
 import { Clock, Box } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CommentSection } from './shared/CommentSection';
 
 interface Props {
     data: CronJobResource;
@@ -51,6 +52,10 @@ export const CronJobForm: React.FC<Props> = ({ data, onChange }) => {
 
     return (
         <div className="space-y-6">
+            <CommentSection
+                value={data._comment}
+                onChange={(comment) => onChange({ ...data, _comment: comment })}
+            />
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 flex items-center gap-2">
                     <Clock size={20} className="text-blue-500" />

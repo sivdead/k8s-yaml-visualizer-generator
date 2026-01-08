@@ -4,6 +4,7 @@ import { PersistentVolumeClaimResource } from '../../types';
 import { Input, Label, SectionTitle, Select } from '../FormComponents';
 import { HardDrive, Box } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CommentSection } from './shared/CommentSection';
 
 interface Props {
   data: PersistentVolumeClaimResource;
@@ -52,22 +53,26 @@ export const PVCForm: React.FC<Props> = ({ data, onChange }) => {
 
   return (
     <div className="space-y-6">
+      <CommentSection
+        value={data._comment}
+        onChange={(comment) => onChange({ ...data, _comment: comment })}
+      />
       {/* Metadata */}
       <div>
         <SectionTitle title={t.common.metadata} icon={<Box size={20} />} />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>{t.common.name}</Label>
-            <Input 
-              value={data.metadata.name} 
-              onChange={(e) => updateMeta('name', e.target.value)} 
+            <Input
+              value={data.metadata.name}
+              onChange={(e) => updateMeta('name', e.target.value)}
             />
           </div>
           <div>
             <Label>{t.common.namespace}</Label>
-            <Input 
-              value={data.metadata.namespace} 
-              onChange={(e) => updateMeta('namespace', e.target.value)} 
+            <Input
+              value={data.metadata.namespace}
+              onChange={(e) => updateMeta('namespace', e.target.value)}
             />
           </div>
         </div>
@@ -76,22 +81,22 @@ export const PVCForm: React.FC<Props> = ({ data, onChange }) => {
       {/* Storage Specs */}
       <div>
         <SectionTitle title={t.pvc.storage} icon={<HardDrive size={20} />} />
-        
+
         <div className="space-y-4">
-           {/* Capacity and Class */}
-           <div className="grid grid-cols-2 gap-4">
+          {/* Capacity and Class */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>{t.pvc.request}</Label>
-              <Input 
-                value={data.spec.resources.requests.storage} 
+              <Input
+                value={data.spec.resources.requests.storage}
                 onChange={(e) => updateResources(e.target.value)}
                 placeholder="8Gi"
               />
             </div>
             <div>
               <Label>{t.pvc.className}</Label>
-              <Input 
-                value={data.spec.storageClassName || ''} 
+              <Input
+                value={data.spec.storageClassName || ''}
                 onChange={(e) => updateSpec('storageClassName', e.target.value || undefined)}
                 placeholder="standard"
               />
@@ -103,14 +108,14 @@ export const PVCForm: React.FC<Props> = ({ data, onChange }) => {
 
           {/* Volume Mode */}
           <div>
-             <Label>{t.pvc.volumeMode}</Label>
-             <Select
-                value={data.spec.volumeMode || 'Filesystem'}
-                onChange={(e) => updateSpec('volumeMode', e.target.value)}
-             >
-               <option value="Filesystem">Filesystem</option>
-               <option value="Block">Block</option>
-             </Select>
+            <Label>{t.pvc.volumeMode}</Label>
+            <Select
+              value={data.spec.volumeMode || 'Filesystem'}
+              onChange={(e) => updateSpec('volumeMode', e.target.value)}
+            >
+              <option value="Filesystem">Filesystem</option>
+              <option value="Block">Block</option>
+            </Select>
           </div>
 
           {/* Access Modes */}
@@ -119,7 +124,7 @@ export const PVCForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="flex flex-col gap-3 mt-3">
               {['ReadWriteOnce', 'ReadOnlyMany', 'ReadWriteMany', 'ReadWriteOncePod'].map((mode) => (
                 <label key={mode} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                  <input 
+                  <input
                     type="checkbox"
                     checked={data.spec.accessModes.includes(mode)}
                     onChange={(e) => handleAccessModeChange(mode, e.target.checked)}

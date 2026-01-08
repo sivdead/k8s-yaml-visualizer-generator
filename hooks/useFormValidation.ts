@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { z } from 'zod';
 
 export interface ValidationError {
     field: string;
@@ -11,7 +12,7 @@ export interface ValidationResult {
 }
 
 /**
- * K8s 资源验证规则
+ * K8s 资源验证规则 (保留向后兼容)
  */
 export const validators = {
     // 名称验证 - 必须符合 K8s DNS-1123 标准
@@ -99,12 +100,13 @@ export const validators = {
 };
 
 /**
- * 表单验证 Hook
+ * 表单验证 Hook - 支持传统验证器和 Zod Schema
  */
 export function useFormValidation<T extends Record<string, any>>() {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+    // 传统验证方式
     const validate = useCallback((field: string, value: any, validator: (val: any) => string | null) => {
         const error = validator(value);
         setErrors(prev => {
@@ -118,13 +120,77 @@ export function useFormValidation<T extends Record<string, any>>() {
         return error === null;
     }, []);
 
+    // Zod Schema 验证 - 单字段
+    const validateWithZod = useCallback(<S extends z.ZodType>(
+        field: string,
+        value: unknown,
+        schema: S
+    ): boolean => {
+        const result = schema.safeParse(value);
+        setErrors(prev => {
+            if (result.success) {
+                const { [field]: _, ...rest } = prev;
+                return rest;
+            } else {
+                return { ...prev, [field]: result.error.issues[0]?.message || '验证失败' };
+            }
+        });
+        return result.success;
+    }, []);
+
+    // Zod Schema 验证 - 完整对象
+    const validateAllWithZod = useCallback(<S extends z.ZodType>(
+        data: unknown,
+        schema: S
+    ): { valid: boolean; errors: Record<string, string> } => {
+        const result = schema.safeParse(data);
+        if (result.success) {
+            setErrors({});
+            return { valid: true, errors: {} };
+        }
+
+        const newErrors: Record<string, string> = {};
+        result.error.issues.forEach((err) => {
+            const path = err.path.join('.');
+            newErrors[path] = err.message;
+        });
+        setErrors(newErrors);
+        return { valid: false, errors: newErrors };
+    }, []);
+
+    // 设置单个错误
+    const setError = useCallback((field: string, message: string) => {
+        setErrors(prev => ({ ...prev, [field]: message }));
+    }, []);
+
+    // 清除单个错误
+    const clearError = useCallback((field: string) => {
+        setErrors(prev => {
+            const { [field]: _, ...rest } = prev;
+            return rest;
+        });
+    }, []);
+
     const touch = useCallback((field: string) => {
         setTouched(prev => ({ ...prev, [field]: true }));
+    }, []);
+
+    const touchAll = useCallback((fields: string[]) => {
+        setTouched(prev => {
+            const newTouched = { ...prev };
+            fields.forEach(f => { newTouched[f] = true; });
+            return newTouched;
+        });
     }, []);
 
     const getError = useCallback((field: string): string | undefined => {
         return touched[field] ? errors[field] : undefined;
     }, [errors, touched]);
+
+    // 获取错误（不考虑 touched 状态，用于表单提交时）
+    const getErrorDirect = useCallback((field: string): string | undefined => {
+        return errors[field];
+    }, [errors]);
 
     const hasError = useCallback((field: string): boolean => {
         return touched[field] && !!errors[field];
@@ -143,8 +209,14 @@ export function useFormValidation<T extends Record<string, any>>() {
         errors,
         touched,
         validate,
+        validateWithZod,
+        validateAllWithZod,
+        setError,
+        clearError,
         touch,
+        touchAll,
         getError,
+        getErrorDirect,
         hasError,
         clearErrors,
         isFormValid,

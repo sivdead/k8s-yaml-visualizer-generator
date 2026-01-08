@@ -4,3 +4,4 @@ export { ProbeForm } from './ProbeForm';
 export { ResourceLimitsSection } from './ResourceLimitsSection';
 export { EnvVarsSection } from './EnvVarsSection';
 export { VolumeMountsSection } from './VolumeMountsSection';
+export { CommentSection } from './CommentSection';
