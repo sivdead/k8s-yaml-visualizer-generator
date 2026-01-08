@@ -62,6 +62,7 @@
     rel="stylesheet">
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -73,6 +74,15 @@
               blue: '#326CE5',
               dark: '#232F3E',
             }
+          },
+          animation: {
+            'slide-in': 'slideIn 0.3s ease-out',
+          },
+          keyframes: {
+            slideIn: {
+              '0%': { transform: 'translateX(100%)', opacity: '0' },
+              '100%': { transform: 'translateX(0)', opacity: '1' },
+            }
           }
         }
       }
@@ -81,6 +91,9 @@
   <style>
     body {
       background-color: #f8fafc;
+    }
+    .dark body, html.dark body {
+      background-color: #0f172a;
     }
   </style>
 </head>

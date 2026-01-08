@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toYaml, downloadYaml, parseYaml } from './services/yamlUtils';
 import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob } from './services/templates';
-import { ResourceType, K8sResource } from './types';
+import { ResourceType, K8sResource, DeploymentResource, ServiceResource, ConfigMapResource, IngressResource, PersistentVolumeClaimResource, SecretResource, CronJobResource } from './types';
+import { isDeployment, isService, isConfigMap, isIngress, isPVC, isSecret, isCronJob } from './utils/typeGuards';
 import { DeploymentForm } from './components/forms/DeploymentForm';
 import { ServiceForm } from './components/forms/ServiceForm';
 import { ConfigMapForm } from './components/forms/ConfigMapForm';
@@ -11,7 +12,11 @@ import { PVCForm } from './components/forms/PVCForm';
 import { SecretForm } from './components/forms/SecretForm';
 import { CronJobForm } from './components/forms/CronJobForm';
 import { ImportModal } from './components/modals/ImportModal';
+import { ExportModal } from './components/modals/ExportModal';
+import { YamlPreview } from './components/YamlPreview';
+import { ToastContainer } from './components/ToastContainer';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { AppContextProvider, useTheme, useToast } from './contexts/AppContext';
 import {
   Box,
   Layers,
@@ -28,7 +33,9 @@ import {
   X,
   Upload,
   Key,
-  Clock
+  Clock,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 interface SavedConfig {
@@ -43,6 +50,8 @@ const STORAGE_KEY = 'k8s_generator_saved_configs';
 
 const AppContent = () => {
   const { t, language, setLanguage } = useLanguage();
+  const { isDark, toggleTheme } = useTheme();
+  const { addToast } = useToast();
   const [resourceType, setResourceType] = useState<ResourceType>('deployment');
   const [formData, setFormData] = useState<K8sResource>(defaultDeployment);
   const [yamlOutput, setYamlOutput] = useState('');
@@ -50,6 +59,7 @@ const AppContent = () => {
   const [savedConfigs, setSavedConfigs] = useState<SavedConfig[]>([]);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [configName, setConfigName] = useState('');
 
   // Resizable Preview State
@@ -211,10 +221,10 @@ const AppContent = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
+    <div className={`min-h-screen flex flex-col md:flex-row font-sans ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
 
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col h-screen sticky top-0">
+      <aside className={`w-full md:w-64 border-r flex-shrink-0 flex flex-col h-screen sticky top-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-2 text-blue-600">
             <div className="p-2 bg-blue-600 rounded-lg text-white">
@@ -277,9 +287,9 @@ const AppContent = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <header className="bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm z-10 flex-shrink-0">
+        <header className={`border-b p-4 flex justify-between items-center shadow-sm z-10 flex-shrink-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-slate-800 capitalize">
+            <h1 className={`text-xl font-semibold capitalize ${isDark ? 'text-white' : 'text-slate-800'}`}>
               {t.nav[resourceType]} {t.header.config}
             </h1>
           </div>
@@ -287,10 +297,18 @@ const AppContent = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
-              className="flex items-center gap-1.5 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-slate-300 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
             >
               <Languages size={16} />
               {language === 'en' ? '中文' : 'English'}
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className={`flex items-center gap-1.5 p-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-amber-400 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
+              title={isDark ? 'Light Mode' : 'Dark Mode'}
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
@@ -319,7 +337,7 @@ const AppContent = () => {
               {copied ? t.header.copied : t.header.copy}
             </button>
             <button
-              onClick={handleDownload}
+              onClick={() => setIsExportModalOpen(true)}
               className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-md text-sm font-medium hover:bg-slate-800 transition-colors"
             >
               <Download size={16} />
@@ -334,13 +352,13 @@ const AppContent = () => {
           {/* Form Area */}
           <div className="flex-1 overflow-y-auto p-6 bg-slate-50 min-w-[320px] custom-scrollbar">
             <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              {resourceType === 'deployment' && <DeploymentForm data={formData as any} onChange={setFormData} />}
-              {resourceType === 'service' && <ServiceForm data={formData as any} onChange={setFormData} />}
-              {resourceType === 'configmap' && <ConfigMapForm data={formData as any} onChange={setFormData} />}
-              {resourceType === 'ingress' && <IngressForm data={formData as any} onChange={setFormData} />}
-              {resourceType === 'pvc' && <PVCForm data={formData as any} onChange={setFormData} />}
-              {resourceType === 'secret' && <SecretForm data={formData as any} onChange={setFormData} />}
-              {resourceType === 'cronjob' && <CronJobForm data={formData as any} onChange={setFormData} />}
+              {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} />}
+              {isService(formData) && <ServiceForm data={formData} onChange={setFormData} />}
+              {isConfigMap(formData) && <ConfigMapForm data={formData} onChange={setFormData} />}
+              {isIngress(formData) && <IngressForm data={formData} onChange={setFormData} />}
+              {isPVC(formData) && <PVCForm data={formData} onChange={setFormData} />}
+              {isSecret(formData) && <SecretForm data={formData} onChange={setFormData} />}
+              {isCronJob(formData) && <CronJobForm data={formData} onChange={setFormData} />}
             </div>
           </div>
 
@@ -353,18 +371,13 @@ const AppContent = () => {
 
           {/* Preview Area */}
           <div
-            className="w-full bg-[#1e1e1e] flex flex-col border-l border-slate-800 shadow-xl flex-shrink-0"
+            className="flex-shrink-0"
             style={{ width: isDesktop ? previewWidth : '100%' }}
           >
-            <div className="p-3 bg-[#252526] text-slate-400 text-xs font-mono border-b border-[#333] flex justify-between items-center">
-              <span>{t.header.preview}: {formData.metadata.name}.yaml</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-blue-900 text-blue-200">YAML</span>
-            </div>
-            <div className="flex-1 overflow-auto p-4 custom-scrollbar">
-              <pre className="font-mono text-sm text-[#d4d4d4] leading-relaxed whitespace-pre-wrap break-all lg:whitespace-pre lg:break-normal">
-                <code>{yamlOutput}</code>
-              </pre>
-            </div>
+            <YamlPreview
+              code={yamlOutput}
+              filename={`${formData.metadata.name}.yaml`}
+            />
           </div>
         </div>
       </main>
@@ -413,6 +426,15 @@ const AppContent = () => {
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImport}
       />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        savedConfigs={savedConfigs}
+        currentConfig={formData}
+        currentType={resourceType}
+      />
     </div>
   );
 };
@@ -420,10 +442,13 @@ const AppContent = () => {
 import { Analytics } from '@vercel/analytics/react';
 
 const App = () => (
-  <LanguageProvider>
-    <AppContent />
-    <Analytics />
-  </LanguageProvider>
+  <AppContextProvider>
+    <LanguageProvider>
+      <AppContent />
+      <ToastContainer />
+      <Analytics />
+    </LanguageProvider>
+  </AppContextProvider>
 );
 
 export default App;
