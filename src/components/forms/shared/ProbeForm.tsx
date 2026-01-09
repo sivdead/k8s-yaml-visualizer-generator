@@ -24,13 +24,13 @@ export const ProbeForm: React.FC<ProbeFormProps> = ({
     const type = probe?.httpGet ? 'http' : probe?.tcpSocket ? 'tcp' : probe?.exec ? 'exec' : 'none';
 
     return (
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2 mb-3">
                 {probeType === 'livenessProbe'
-                    ? <HeartPulse size={16} className="text-red-500" />
-                    : <PlayCircle size={16} className="text-green-500" />
+                    ? <HeartPulse size={16} className="text-red-500 dark:text-red-400" />
+                    : <PlayCircle size={16} className="text-green-500 dark:text-green-400" />
                 }
-                <h4 className="font-medium text-slate-800">{title}</h4>
+                <h4 className="font-medium text-slate-800 dark:text-slate-200">{title}</h4>
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
@@ -79,7 +79,7 @@ export const ProbeForm: React.FC<ProbeFormProps> = ({
                             />
                         </div>
                     </div>
-                    <div className="border-t border-slate-200 pt-3">
+                    <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
                         {type === 'http' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

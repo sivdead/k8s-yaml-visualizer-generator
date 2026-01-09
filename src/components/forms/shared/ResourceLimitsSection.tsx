@@ -30,8 +30,8 @@ export const ResourceLimitsSection: React.FC<ResourceLimitsSectionProps> = ({
     const { t } = useLanguage();
 
     return (
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                 <Activity size={16} />
                 {t.deploy.resources}
             </h4>

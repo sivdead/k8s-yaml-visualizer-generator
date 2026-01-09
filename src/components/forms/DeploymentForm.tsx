@@ -339,12 +339,12 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
       <CollapsibleSection title={t.deploy.volumes} icon={<Database size={20} />}>
         <div className="space-y-3">
           {volumes.map((vol, idx) => (
-            <div key={idx} className="flex gap-2 items-center bg-slate-50 p-3 border rounded text-sm">
+            <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800 p-3 border dark:border-slate-700 rounded text-sm dark:text-slate-200">
               <div className="flex-1 font-semibold">{vol.name}</div>
-              <button type="button" onClick={() => removeVolume(idx)} className="text-red-500"><Trash2 size={16} /></button>
+              <button type="button" onClick={() => removeVolume(idx)} className="text-red-500 hover:text-red-400"><Trash2 size={16} /></button>
             </div>
           ))}
-          <div className="bg-slate-100 p-3 rounded-lg border border-slate-200">
+          <div className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div><Label>{t.deploy.volName}</Label><Input value={newVolName} onChange={(e) => setNewVolName(e.target.value)} /></div>
               <div>
@@ -379,9 +379,9 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
           {pullSecrets.length > 0 && (
             <div className="space-y-2 mb-3">
               {pullSecrets.map((secret, idx) => (
-                <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 border rounded text-xs">
-                  <Key size={14} className="text-slate-400" />
-                  <span className="flex-1 font-medium text-slate-700">{secret.name}</span>
+                <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800 p-2 border dark:border-slate-700 rounded text-xs">
+                  <Key size={14} className="text-slate-400 dark:text-slate-500" />
+                  <span className="flex-1 font-medium text-slate-700 dark:text-slate-300">{secret.name}</span>
                   <button
                     type="button"
                     onClick={() => {

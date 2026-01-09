@@ -86,7 +86,7 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
       <SectionTitle title={t.configmap.data} icon={<FileText size={20} />} />
       <div className="space-y-4">
         {entries.map((entry, idx) => (
-          <div key={idx} className="p-4 bg-slate-50 rounded-lg border border-slate-200 relative group">
+          <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 relative group">
             <button
               onClick={() => removeEntry(idx)}
               className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 transition-colors"
@@ -107,7 +107,7 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
                 <textarea
                   value={entry.value}
                   onChange={(e) => updateEntry(idx, 'value', e.target.value)}
-                  className="w-full h-32 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full h-32 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="{}"
                 />
               </div>
@@ -117,7 +117,7 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
 
         <button
           onClick={addEntry}
-          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 font-medium"
+          className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2 font-medium"
         >
           <Plus size={18} />
           {t.configmap.addEntry}

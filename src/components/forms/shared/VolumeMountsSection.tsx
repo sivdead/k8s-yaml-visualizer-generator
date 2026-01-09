@@ -53,26 +53,26 @@ export const VolumeMountsSection: React.FC<VolumeMountsSectionProps> = ({
     };
 
     return (
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                 <HardDrive size={16} />
                 {t.deploy.mounts}
             </h4>
             <div className="space-y-2">
                 {container.volumeMounts?.map((mount, mIdx) => (
-                    <div key={mIdx} className="flex gap-2 items-center bg-white p-2 border rounded shadow-sm text-xs">
+                    <div key={mIdx} className="flex gap-2 items-center bg-white dark:bg-slate-800 p-2 border dark:border-slate-700 rounded shadow-sm text-xs dark:text-slate-200">
                         <span className="font-bold">{mount.name}</span> → <span>{mount.mountPath}</span>
-                        {mount.readOnly && <span className="text-amber-600 text-xs">(RO)</span>}
+                        {mount.readOnly && <span className="text-amber-600 dark:text-amber-500 text-xs">(RO)</span>}
                         <button
                             type="button"
                             onClick={() => onRemoveVolumeMount(containerType, containerIndex, mIdx)}
-                            className="ml-auto text-red-500"
+                            className="ml-auto text-red-500 hover:text-red-400"
                         >
                             <Trash2 size={14} />
                         </button>
                     </div>
                 ))}
-                <div className="flex gap-2 items-end bg-slate-100 p-2 rounded border border-slate-200">
+                <div className="flex gap-2 items-end bg-slate-100 dark:bg-slate-800/50 p-2 rounded border border-slate-200 dark:border-slate-700">
                     <div className="flex-1">
                         <Input
                             list={`vol-list-${id}`}

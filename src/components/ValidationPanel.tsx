@@ -72,13 +72,13 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
     }
 
     return (
-        <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+        <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-800">
             {/* 头部 */}
             <div className={`px-3 py-2 flex items-center justify-between ${!valid
-                    ? 'bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-800'
-                    : warnings.length > 0
-                        ? 'bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800'
-                        : 'bg-green-50 dark:bg-green-900/30 border-b border-green-200 dark:border-green-800'
+                ? 'bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-800'
+                : warnings.length > 0
+                    ? 'bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800'
+                    : 'bg-green-50 dark:bg-green-900/30 border-b border-green-200 dark:border-green-800'
                 }`}>
                 <div className="flex items-center gap-2">
                     <Shield size={16} className={

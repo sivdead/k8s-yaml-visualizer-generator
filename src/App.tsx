@@ -351,8 +351,8 @@ const AppContent = () => {
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
 
           {/* Form Area */}
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-50 min-w-[320px] custom-scrollbar">
-            <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className={`flex-1 overflow-y-auto p-6 min-w-[320px] custom-scrollbar ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
+            <div className={`max-w-3xl mx-auto rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
               {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} />}
               {isService(formData) && <ServiceForm data={formData} onChange={setFormData} />}
               {isConfigMap(formData) && <ConfigMapForm data={formData} onChange={setFormData} />}

@@ -119,11 +119,11 @@ export const PVCForm: React.FC<Props> = ({ data, onChange }) => {
           </div>
 
           {/* Access Modes */}
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
             <Label>{t.pvc.accessModes}</Label>
             <div className="flex flex-col gap-3 mt-3">
               {['ReadWriteOnce', 'ReadOnlyMany', 'ReadWriteMany', 'ReadWriteOncePod'].map((mode) => (
-                <label key={mode} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                <label key={mode} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={data.spec.accessModes.includes(mode)}

@@ -209,8 +209,8 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
 
       <div className="space-y-6 mt-4">
         {data.spec.rules.map((rule, rIdx) => (
-          <div key={rIdx} className="border border-slate-200 rounded-lg overflow-hidden">
-            <div className="bg-slate-100 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+          <div key={rIdx} className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <div className="bg-slate-100 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
               <div className="flex-1 mr-4">
                 <Label>{t.ingress.host}</Label>
                 <Input
@@ -228,9 +228,9 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
               </button>
             </div>
 
-            <div className="p-4 bg-slate-50 space-y-3">
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/30 space-y-3">
               {rule.http.paths.map((path, pIdx) => (
-                <div key={pIdx} className="grid grid-cols-12 gap-2 items-end bg-white p-3 rounded shadow-sm border border-slate-100">
+                <div key={pIdx} className="grid grid-cols-12 gap-2 items-end bg-white dark:bg-slate-800 p-3 rounded shadow-sm border border-slate-100 dark:border-slate-700">
                   <div className="col-span-3">
                     <Label>{t.ingress.path}</Label>
                     <Input
@@ -278,7 +278,7 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
               <button
                 type="button"
                 onClick={() => addPath(rIdx)}
-                className="w-full py-2 border border-dashed border-slate-300 rounded text-sm text-slate-500 hover:border-blue-500 hover:text-blue-600 flex items-center justify-center gap-1"
+                className="w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 rounded text-sm text-slate-500 dark:text-slate-400 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 flex items-center justify-center gap-1"
               >
                 <Plus size={14} /> {t.ingress.addPath}
               </button>

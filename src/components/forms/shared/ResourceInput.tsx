@@ -58,12 +58,12 @@ export const ResourceInput: React.FC<ResourceInputProps> = ({
                 value={numericVal}
                 onChange={handleChangeNum}
                 placeholder={type === 'cpu' ? '100' : '128'}
-                className="flex-1 min-w-0 w-full rounded-l-md border border-r-0 border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="flex-1 min-w-0 w-full rounded-l-md border border-r-0 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
             <select
                 value={unit}
                 onChange={handleChangeUnit}
-                className="w-20 rounded-r-md border border-slate-300 bg-slate-50 px-2 py-2 text-sm text-slate-600 focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
+                className="w-20 rounded-r-md border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-2 py-2 text-sm text-slate-600 dark:text-slate-200 focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
             >
                 {type === 'cpu' ? (
                     <>

@@ -86,8 +86,8 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
     };
 
     return (
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                 <Key size={16} />
                 {t.deploy.envVars}
             </h4>
@@ -95,19 +95,19 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
             {/* Existing Env Vars */}
             <div className="space-y-2 mb-4">
                 {container.env?.map((env, eIdx) => (
-                    <div key={eIdx} className="flex gap-2 items-center bg-white p-2 border rounded shadow-sm text-xs">
-                        <span className="font-bold text-slate-700 min-w-[80px]">{env.name}</span>
+                    <div key={eIdx} className="flex gap-2 items-center bg-white dark:bg-slate-800 p-2 border dark:border-slate-700 rounded shadow-sm text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-200 min-w-[80px]">{env.name}</span>
                         <span className="text-slate-400">→</span>
                         {env.value !== undefined ? (
-                            <span className="flex-1 truncate text-slate-600 font-mono">{env.value}</span>
+                            <span className="flex-1 truncate text-slate-600 dark:text-slate-300 font-mono">{env.value}</span>
                         ) : env.valueFrom?.configMapKeyRef ? (
-                            <span className="flex-1 truncate text-blue-600 flex items-center gap-1">
-                                <span className="bg-blue-50 px-1 rounded border border-blue-100">CM</span>
+                            <span className="flex-1 truncate text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                <span className="bg-blue-50 dark:bg-blue-900/30 px-1 rounded border border-blue-100 dark:border-blue-800">CM</span>
                                 {env.valueFrom.configMapKeyRef.name} : {env.valueFrom.configMapKeyRef.key}
                             </span>
                         ) : env.valueFrom?.secretKeyRef ? (
-                            <span className="flex-1 truncate text-purple-600 flex items-center gap-1">
-                                <span className="bg-purple-50 px-1 rounded border border-purple-100">Secret</span>
+                            <span className="flex-1 truncate text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                                <span className="bg-purple-50 dark:bg-purple-900/30 px-1 rounded border border-purple-100 dark:border-purple-800">Secret</span>
                                 {env.valueFrom.secretKeyRef.name} : {env.valueFrom.secretKeyRef.key}
                             </span>
                         ) : (
@@ -116,7 +116,7 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
                         <button
                             type="button"
                             onClick={() => onRemoveEnvVar(containerType, containerIndex, eIdx)}
-                            className="text-red-500"
+                            className="text-red-500 hover:text-red-400"
                         >
                             <Trash2 size={14} />
                         </button>
@@ -125,7 +125,7 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
             </div>
 
             {/* Add New Env Var */}
-            <div className="bg-slate-100 p-2 rounded border border-slate-200 space-y-2">
+            <div className="bg-slate-100 dark:bg-slate-800/50 p-2 rounded border border-slate-200 dark:border-slate-700 space-y-2">
                 <div className="flex gap-2">
                     <div className="flex-1">
                         <Input
@@ -184,28 +184,28 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
             </div>
 
             {/* Env From (Bulk Load) */}
-            <div className="mt-4 pt-4 border-t border-slate-200">
-                <h5 className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-tight">
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <h5 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-tight">
                     {t.deploy.envFrom}
                 </h5>
                 <div className="space-y-2">
                     {container.envFrom?.map((ef, efIdx) => (
-                        <div key={efIdx} className="flex gap-2 items-center bg-white p-2 border rounded shadow-sm text-xs">
+                        <div key={efIdx} className="flex gap-2 items-center bg-white dark:bg-slate-800 p-2 border dark:border-slate-700 rounded shadow-sm text-xs">
                             {ef.configMapRef ? (
                                 <>
-                                    <span className="font-bold text-blue-600 bg-blue-50 px-1 rounded border border-blue-100">CM</span>
-                                    <span className="flex-1 font-mono text-slate-700">{ef.configMapRef.name}</span>
+                                    <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1 rounded border border-blue-100 dark:border-blue-800">CM</span>
+                                    <span className="flex-1 font-mono text-slate-700 dark:text-slate-300">{ef.configMapRef.name}</span>
                                 </>
                             ) : ef.secretRef ? (
                                 <>
-                                    <span className="font-bold text-purple-600 bg-purple-50 px-1 rounded border border-purple-100">Secret</span>
-                                    <span className="flex-1 font-mono text-slate-700">{ef.secretRef.name}</span>
+                                    <span className="font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-1 rounded border border-purple-100 dark:border-purple-800">Secret</span>
+                                    <span className="flex-1 font-mono text-slate-700 dark:text-slate-300">{ef.secretRef.name}</span>
                                 </>
                             ) : null}
                             <button
                                 type="button"
                                 onClick={() => onRemoveEnvFrom(containerType, containerIndex, efIdx)}
-                                className="text-red-500"
+                                className="text-red-500 hover:text-red-400"
                             >
                                 <Trash2 size={14} />
                             </button>
