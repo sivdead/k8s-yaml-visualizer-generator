@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ConfigMapResource } from '../../types';
 import { Input, Label, SectionTitle } from '../FormComponents';
 import { FileText, Plus, Trash2, Box } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { CommentSection } from './shared/CommentSection';
+import { useKeyValuePairs } from '../../hooks/useKeyValuePairs';
 
 interface Props {
   data: ConfigMapResource;
@@ -13,49 +14,16 @@ interface Props {
 
 export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
   const { t } = useLanguage();
-  // Convert Record<string, string> to Array for easier UI manipulation
-  const [entries, setEntries] = useState<{ key: string; value: string }[]>([]);
 
-  useEffect(() => {
-    if (data.data) {
-      setEntries(Object.entries(data.data).map(([key, value]) => ({ key, value })));
-    }
-  }, [data]);
+  const { entries, updateEntry, addEntry, removeEntry } = useKeyValuePairs(
+    data.data,
+    (newData) => onChange({ ...data, data: newData })
+  );
 
   const updateMeta = (field: string, value: string) => {
     onChange({
       ...data,
       metadata: { ...data.metadata, [field]: value }
-    });
-  };
-
-  const updateEntry = (index: number, field: 'key' | 'value', val: string) => {
-    const newEntries = [...entries];
-    newEntries[index] = { ...newEntries[index], [field]: val };
-    setEntries(newEntries);
-    syncData(newEntries);
-  };
-
-  const addEntry = () => {
-    const newEntries = [...entries, { key: '', value: '' }];
-    setEntries(newEntries);
-    // Don't sync immediately on add to avoid empty key issues, wait for input
-  };
-
-  const removeEntry = (index: number) => {
-    const newEntries = entries.filter((_, i) => i !== index);
-    setEntries(newEntries);
-    syncData(newEntries);
-  };
-
-  const syncData = (currentEntries: { key: string; value: string }[]) => {
-    const dataObj: Record<string, string> = {};
-    currentEntries.forEach(e => {
-      if (e.key) dataObj[e.key] = e.value;
-    });
-    onChange({
-      ...data,
-      data: dataObj
     });
   };
 
