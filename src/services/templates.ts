@@ -1,6 +1,6 @@
 
 
-import { DeploymentResource, ServiceResource, ConfigMapResource, IngressResource, PersistentVolumeClaimResource, SecretResource, CronJobResource } from '../types';
+import { DeploymentResource, ServiceResource, ConfigMapResource, IngressResource, PersistentVolumeClaimResource, SecretResource, CronJobResource, JobResource, DaemonSetResource, StatefulSetResource, HPAResource } from '../types';
 
 export const defaultDeployment: DeploymentResource = {
   apiVersion: 'apps/v1',
@@ -167,5 +167,114 @@ export const defaultCronJob: CronJobResource = {
         }
       }
     }
+  }
+};
+
+export const defaultJob: JobResource = {
+  apiVersion: 'batch/v1',
+  kind: 'Job',
+  metadata: {
+    name: 'my-job',
+    namespace: 'default',
+    labels: { app: 'my-job' }
+  },
+  spec: {
+    completions: 1,
+    parallelism: 1,
+    backoffLimit: 6,
+    template: {
+      spec: {
+        containers: [
+          {
+            name: 'my-job-container',
+            image: 'busybox:latest',
+            imagePullPolicy: 'IfNotPresent',
+            command: ['/bin/sh', '-c', 'echo "Job completed successfully" && sleep 10']
+          }
+        ],
+        restartPolicy: 'Never'
+      }
+    }
+  }
+};
+
+export const defaultDaemonSet: DaemonSetResource = {
+  apiVersion: 'apps/v1',
+  kind: 'DaemonSet',
+  metadata: {
+    name: 'my-daemonset',
+    namespace: 'default',
+    labels: { app: 'my-daemonset' }
+  },
+  spec: {
+    selector: {
+      matchLabels: { app: 'my-daemonset' }
+    },
+    template: {
+      metadata: {
+        labels: { app: 'my-daemonset' }
+      },
+      spec: {
+        containers: [
+          {
+            name: 'my-daemonset-container',
+            image: 'nginx:latest',
+            imagePullPolicy: 'IfNotPresent',
+            ports: [{ containerPort: 80 }]
+          }
+        ]
+      }
+    }
+  }
+};
+
+export const defaultStatefulSet: StatefulSetResource = {
+  apiVersion: 'apps/v1',
+  kind: 'StatefulSet',
+  metadata: {
+    name: 'my-statefulset',
+    namespace: 'default',
+    labels: { app: 'my-statefulset' }
+  },
+  spec: {
+    serviceName: 'my-service',
+    replicas: 3,
+    selector: {
+      matchLabels: { app: 'my-statefulset' }
+    },
+    template: {
+      metadata: {
+        labels: { app: 'my-statefulset' }
+      },
+      spec: {
+        containers: [
+          {
+            name: 'my-statefulset-container',
+            image: 'nginx:latest',
+            imagePullPolicy: 'IfNotPresent',
+            ports: [{ containerPort: 80 }]
+          }
+        ]
+      }
+    }
+  }
+};
+
+export const defaultHPA: HPAResource = {
+  apiVersion: 'autoscaling/v1',
+  kind: 'HorizontalPodAutoscaler',
+  metadata: {
+    name: 'my-hpa',
+    namespace: 'default'
+  },
+  spec: {
+    scaleTargetRef: {
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
+      name: 'my-app'
+    },
+    minReplicas: 1,
+    maxReplicas: 10,
+    targetCPUUtilizationPercentage: 80
   }
 };

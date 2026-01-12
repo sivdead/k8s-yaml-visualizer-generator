@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toYaml, downloadYaml, parseYaml } from './services/yamlUtils';
-import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob } from './services/templates';
-import { ResourceType, K8sResource, DeploymentResource, ServiceResource, ConfigMapResource, IngressResource, PersistentVolumeClaimResource, SecretResource, CronJobResource } from './types';
-import { isDeployment, isService, isConfigMap, isIngress, isPVC, isSecret, isCronJob } from './utils/typeGuards';
+import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob, defaultJob, defaultDaemonSet, defaultStatefulSet, defaultHPA } from './services/templates';
+import { ResourceType, K8sResource } from './types';
+import { isDeployment, isService, isConfigMap, isIngress, isPVC, isSecret, isCronJob, isJob, isDaemonSet, isStatefulSet, isHPA } from './utils/typeGuards';
 import { DeploymentForm } from './components/forms/DeploymentForm';
 import { ServiceForm } from './components/forms/ServiceForm';
 import { ConfigMapForm } from './components/forms/ConfigMapForm';
@@ -11,6 +11,10 @@ import { IngressForm } from './components/forms/IngressForm';
 import { PVCForm } from './components/forms/PVCForm';
 import { SecretForm } from './components/forms/SecretForm';
 import { CronJobForm } from './components/forms/CronJobForm';
+import { JobForm } from './components/forms/JobForm';
+import { DaemonSetForm } from './components/forms/DaemonSetForm';
+import { StatefulSetForm } from './components/forms/StatefulSetForm';
+import { HPAForm } from './components/forms/HPAForm';
 import { ImportModal } from './components/modals/ImportModal';
 import { ExportModal } from './components/modals/ExportModal';
 import { YamlPreview } from './components/YamlPreview';
@@ -36,7 +40,11 @@ import {
   Key,
   Clock,
   Moon,
-  Sun
+  Sun,
+  Play,
+  Server,
+  Database,
+  TrendingUp
 } from 'lucide-react';
 
 interface SavedConfig {
@@ -146,6 +154,10 @@ const AppContent = () => {
       case 'pvc': setFormData(defaultPVC); break;
       case 'secret': setFormData(defaultSecret); break;
       case 'cronjob': setFormData(defaultCronJob); break;
+      case 'job': setFormData(defaultJob); break;
+      case 'daemonset': setFormData(defaultDaemonSet); break;
+      case 'statefulset': setFormData(defaultStatefulSet); break;
+      case 'hpa': setFormData(defaultHPA); break;
     }
   };
 
@@ -191,7 +203,11 @@ const AppContent = () => {
       'Ingress': 'ingress',
       'PersistentVolumeClaim': 'pvc',
       'Secret': 'secret',
-      'CronJob': 'cronjob'
+      'CronJob': 'cronjob',
+      'Job': 'job',
+      'DaemonSet': 'daemonset',
+      'StatefulSet': 'statefulset',
+      'HorizontalPodAutoscaler': 'hpa'
     };
 
     const type = kindMap[parsed.kind];
@@ -238,6 +254,10 @@ const AppContent = () => {
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2">{t.nav.workloads}</div>
           <NavItem type="deployment" label={t.nav.deployment} icon={Layers} />
+          <NavItem type="statefulset" label="StatefulSet" icon={Database} />
+          <NavItem type="daemonset" label="DaemonSet" icon={Server} />
+          <NavItem type="job" label="Job" icon={Play} />
+          <NavItem type="cronjob" label="CronJob" icon={Clock} />
 
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2 mt-6">{t.nav.network}</div>
           <NavItem type="service" label={t.nav.service} icon={Box} />
@@ -247,7 +267,9 @@ const AppContent = () => {
           <NavItem type="configmap" label={t.nav.configmap} icon={FileText} />
           <NavItem type="pvc" label={t.nav.pvc} icon={HardDrive} />
           <NavItem type="secret" label="Secret" icon={Key} />
-          <NavItem type="cronjob" label="CronJob" icon={Clock} />
+
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2 mt-6">Autoscaling</div>
+          <NavItem type="hpa" label="HPA" icon={TrendingUp} />
 
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2 mt-8 flex items-center gap-2">
             <FolderOpen size={14} /> {t.nav.saved}
@@ -360,6 +382,10 @@ const AppContent = () => {
               {isPVC(formData) && <PVCForm data={formData} onChange={setFormData} />}
               {isSecret(formData) && <SecretForm data={formData} onChange={setFormData} />}
               {isCronJob(formData) && <CronJobForm data={formData} onChange={setFormData} />}
+              {isJob(formData) && <JobForm data={formData} onChange={setFormData} />}
+              {isDaemonSet(formData) && <DaemonSetForm data={formData} onChange={setFormData} />}
+              {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} />}
+              {isHPA(formData) && <HPAForm data={formData} onChange={setFormData} />}
             </div>
           </div>
 

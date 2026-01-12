@@ -1,5 +1,6 @@
 
-export type ResourceType = 'deployment' | 'service' | 'configmap' | 'ingress' | 'pvc' | 'secret' | 'cronjob';
+export type ResourceType = 'deployment' | 'service' | 'configmap' | 'ingress' | 'pvc' | 'secret' | 'cronjob' | 'job' | 'daemonset' | 'statefulset' | 'hpa';
+
 
 export interface BaseResource {
   apiVersion: string;
@@ -219,4 +220,95 @@ export interface CronJobResource extends BaseResource {
   };
 }
 
-export type K8sResource = DeploymentResource | ServiceResource | ConfigMapResource | IngressResource | PersistentVolumeClaimResource | SecretResource | CronJobResource;
+export interface JobResource extends BaseResource {
+  kind: 'Job';
+  spec: {
+    completions?: number;
+    parallelism?: number;
+    backoffLimit?: number;
+    template: {
+      metadata?: {
+        labels?: Record<string, string>;
+      };
+      spec: {
+        containers: Array<Container>;
+        restartPolicy: 'Never' | 'OnFailure';
+        volumes?: Array<Volume>;
+        imagePullSecrets?: Array<{ name: string }>;
+      };
+    };
+  };
+}
+
+export interface DaemonSetResource extends BaseResource {
+  kind: 'DaemonSet';
+  spec: {
+    selector: {
+      matchLabels: Record<string, string>;
+    };
+    template: {
+      metadata: {
+        labels: Record<string, string>;
+      };
+      spec: {
+        containers: Array<Container>;
+        initContainers?: Array<Container>;
+        volumes?: Array<Volume>;
+        imagePullSecrets?: Array<{ name: string }>;
+      };
+    };
+  };
+}
+
+export interface StatefulSetResource extends BaseResource {
+  kind: 'StatefulSet';
+  spec: {
+    serviceName: string;
+    replicas: number;
+    selector: {
+      matchLabels: Record<string, string>;
+    };
+    template: {
+      metadata: {
+        labels: Record<string, string>;
+      };
+      spec: {
+        containers: Array<Container>;
+        initContainers?: Array<Container>;
+        volumes?: Array<Volume>;
+        imagePullSecrets?: Array<{ name: string }>;
+      };
+    };
+    volumeClaimTemplates?: Array<{
+      metadata: {
+        name: string;
+      };
+      spec: {
+        accessModes: string[];
+        storageClassName?: string;
+        resources: {
+          requests: {
+            storage: string;
+          };
+        };
+      };
+    }>;
+  };
+}
+
+export interface HPAResource extends BaseResource {
+  kind: 'HorizontalPodAutoscaler';
+  spec: {
+    scaleTargetRef: {
+      apiVersion: string;
+      kind: string;
+      name: string;
+    };
+    minReplicas: number;
+    maxReplicas: number;
+    targetCPUUtilizationPercentage?: number;
+  };
+}
+
+export type K8sResource = DeploymentResource | ServiceResource | ConfigMapResource | IngressResource | PersistentVolumeClaimResource | SecretResource | CronJobResource | JobResource | DaemonSetResource | StatefulSetResource | HPAResource;
+

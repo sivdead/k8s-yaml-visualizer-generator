@@ -7,7 +7,11 @@ import {
     IngressResource,
     PersistentVolumeClaimResource,
     SecretResource,
-    CronJobResource
+    CronJobResource,
+    JobResource,
+    DaemonSetResource,
+    StatefulSetResource,
+    HPAResource
 } from '../types';
 
 /**
@@ -41,6 +45,22 @@ export function isCronJob(resource: K8sResource): resource is CronJobResource {
     return resource.kind === 'CronJob';
 }
 
+export function isJob(resource: K8sResource): resource is JobResource {
+    return resource.kind === 'Job';
+}
+
+export function isDaemonSet(resource: K8sResource): resource is DaemonSetResource {
+    return resource.kind === 'DaemonSet';
+}
+
+export function isStatefulSet(resource: K8sResource): resource is StatefulSetResource {
+    return resource.kind === 'StatefulSet';
+}
+
+export function isHPA(resource: K8sResource): resource is HPAResource {
+    return resource.kind === 'HorizontalPodAutoscaler';
+}
+
 /**
  * Get resource type from K8sResource
  */
@@ -52,7 +72,11 @@ export function getResourceType(resource: K8sResource): ResourceType {
         'Ingress': 'ingress',
         'PersistentVolumeClaim': 'pvc',
         'Secret': 'secret',
-        'CronJob': 'cronjob'
+        'CronJob': 'cronjob',
+        'Job': 'job',
+        'DaemonSet': 'daemonset',
+        'StatefulSet': 'statefulset',
+        'HorizontalPodAutoscaler': 'hpa'
     };
     return kindMap[resource.kind] || 'deployment';
 }
