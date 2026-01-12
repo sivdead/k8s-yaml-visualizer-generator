@@ -213,17 +213,17 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
 
             <CollapsibleSection title={t.common?.metadata || 'Metadata'} icon={<Server size={20} />} defaultOpen={true}>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><Label>Name</Label><Input value={data.metadata.name} onChange={(e) => updateMeta('name', e.target.value)} /></div>
-                    <div><Label>Namespace</Label><Input value={data.metadata.namespace} onChange={(e) => updateMeta('namespace', e.target.value)} /></div>
+                    <div><Label>{t.common.name}</Label><Input value={data.metadata.name} onChange={(e) => updateMeta('name', e.target.value)} /></div>
+                    <div><Label>{t.common.namespace}</Label><Input value={data.metadata.namespace} onChange={(e) => updateMeta('namespace', e.target.value)} /></div>
                 </div>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Pod Selector" icon={<Box size={20} />} defaultOpen={true}>
+            <CollapsibleSection title={t.daemonset.podSelector} icon={<Box size={20} />} defaultOpen={true}>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                    DaemonSet runs one pod on each node. Labels are used to identify pods.
+                    {t.daemonset.podSelectorHint}
                 </p>
                 <div>
-                    <Label>App Label</Label>
+                    <Label>{t.daemonset.appLabel}</Label>
                     <Input
                         value={data.spec.selector.matchLabels.app || ''}
                         onChange={(e) => updateSelector({ ...data.spec.selector.matchLabels, app: e.target.value })}
@@ -237,14 +237,14 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
                 <div className="flex items-center justify-between mb-2 px-2">
                     <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold">
                         <Zap size={20} className="text-amber-500" />
-                        Init Containers
+                        {t.daemonset.initContainers}
                     </div>
                     <button
                         type="button"
                         onClick={() => addContainer('initContainers')}
                         className="flex items-center gap-1 text-xs bg-amber-500 text-white px-2 py-1 rounded hover:bg-amber-600 transition-colors shadow-sm"
                     >
-                        <Plus size={14} /> Add Init Container
+                        <Plus size={14} /> {t.daemonset.addInitContainer}
                     </button>
                 </div>
                 <div className="space-y-4">
@@ -269,7 +269,7 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
                         />
                     ))}
                     {initContainers.length === 0 && (
-                        <div className="text-xs text-slate-400 italic px-2 py-1">No init containers defined.</div>
+                        <div className="text-xs text-slate-400 italic px-2 py-1">{t.daemonset.noInitContainers}</div>
                     )}
                 </div>
             </div>
@@ -279,14 +279,14 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
                 <div className="flex items-center justify-between mb-2 px-2">
                     <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold">
                         <Cpu size={20} className="text-blue-600" />
-                        Containers
+                        {t.daemonset.containers}
                     </div>
                     <button
                         type="button"
                         onClick={() => addContainer('containers')}
                         className="flex items-center gap-1 text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors shadow-sm"
                     >
-                        <Plus size={14} /> Add Container
+                        <Plus size={14} /> {t.daemonset.addContainer}
                     </button>
                 </div>
                 <div className="space-y-4">
@@ -313,7 +313,7 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
                 </div>
             </div>
 
-            <CollapsibleSection title="Volumes" icon={<Database size={20} />}>
+            <CollapsibleSection title={t.daemonset.volumes} icon={<Database size={20} />}>
                 <div className="space-y-3">
                     {volumes.map((vol, idx) => (
                         <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800 p-3 border dark:border-slate-700 rounded text-sm dark:text-slate-200">
@@ -323,27 +323,27 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
                     ))}
                     <div className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                         <div className="grid grid-cols-2 gap-2 mb-2">
-                            <div><Label>Volume Name</Label><Input value={newVolName} onChange={(e) => setNewVolName(e.target.value)} /></div>
+                            <div><Label>{t.daemonset.volumeName}</Label><Input value={newVolName} onChange={(e) => setNewVolName(e.target.value)} /></div>
                             <div>
-                                <Label>Type</Label>
+                                <Label>{t.common.type}</Label>
                                 <Select value={newVolType} onChange={(e) => setNewVolType(e.target.value as any)}>
                                     <option value="pvc">PVC</option><option value="configMap">ConfigMap</option><option value="secret">Secret</option><option value="emptyDir">EmptyDir</option><option value="hostPath">HostPath</option>
                                 </Select>
                             </div>
                         </div>
                         {newVolType === 'pvc' && (
-                            <div className="mb-2"><Label>Claim Name</Label><Input value={newVolClaim} onChange={(e) => setNewVolClaim(e.target.value)} /></div>
+                            <div className="mb-2"><Label>{t.daemonset.claimName}</Label><Input value={newVolClaim} onChange={(e) => setNewVolClaim(e.target.value)} /></div>
                         )}
                         {(newVolType === 'configMap' || newVolType === 'secret') && (
-                            <div className="mb-2"><Label>Resource Name</Label><Input value={newVolRefName} onChange={(e) => setNewVolRefName(e.target.value)} /></div>
+                            <div className="mb-2"><Label>{t.daemonset.resourceName}</Label><Input value={newVolRefName} onChange={(e) => setNewVolRefName(e.target.value)} /></div>
                         )}
                         {newVolType === 'hostPath' && (
-                            <div className="mb-2"><Label>Host Path</Label><Input value={newVolPath} onChange={(e) => setNewVolPath(e.target.value)} /></div>
+                            <div className="mb-2"><Label>{t.daemonset.hostPath}</Label><Input value={newVolPath} onChange={(e) => setNewVolPath(e.target.value)} /></div>
                         )}
                         {newVolType === 'emptyDir' && (
-                            <p className="text-xs text-slate-500 mb-2">Temporary storage, deleted when pod is removed</p>
+                            <p className="text-xs text-slate-500 mb-2">{t.daemonset.tempStorage}</p>
                         )}
-                        <button type="button" onClick={addVolume} className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center justify-center gap-2 text-sm"><Plus size={16} /> Add Volume</button>
+                        <button type="button" onClick={addVolume} className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center justify-center gap-2 text-sm"><Plus size={16} /> {t.daemonset.addVolume}</button>
                     </div>
                 </div>
             </CollapsibleSection>

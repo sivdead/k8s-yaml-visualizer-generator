@@ -34,12 +34,12 @@ export const SecretForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Key size={20} className="text-blue-500 dark:text-blue-400" />
-                    {t.form?.metadata || 'Metadata'}
+                    {t.common.metadata}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Name</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.common.name}</label>
                         <input
                             type="text"
                             value={data.metadata.name}
@@ -48,7 +48,7 @@ export const SecretForm: React.FC<Props> = ({ data, onChange }) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Namespace</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.common.namespace}</label>
                         <input
                             type="text"
                             value={data.metadata.namespace}
@@ -61,33 +61,33 @@ export const SecretForm: React.FC<Props> = ({ data, onChange }) => {
 
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">Data (Key-Value)</h3>
+                    <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200">{t.secret.dataTitle}</h3>
                     <button
                         onClick={addEntry}
                         className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                     >
                         <Plus size={16} />
-                        Add Data
+                        {t.secret.addData}
                     </button>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
                     <div className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                        Values entered here are treated as plain text and will be automatically Base64 encoded in the generated YAML.
+                        {t.secret.base64Hint}
                     </div>
                     {entries.map((entry, index) => (
                         <div key={index} className="flex gap-3 mb-3 items-start">
                             <input
                                 type="text"
                                 value={entry.key}
-                                placeholder="Key"
+                                placeholder={t.common.key}
                                 onChange={(e) => updateEntry(index, 'key', e.target.value)}
                                 className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             />
                             <input
                                 type="text"
                                 value={entry.value}
-                                placeholder="Value"
+                                placeholder={t.common.value}
                                 onChange={(e) => updateEntry(index, 'value', e.target.value)}
                                 className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
                             />
@@ -101,7 +101,7 @@ export const SecretForm: React.FC<Props> = ({ data, onChange }) => {
                     ))}
                     {entries.length === 0 && (
                         <div className="text-center py-8 text-slate-400 text-sm italic">
-                            No data entries. Click "Add Data" to start.
+                            {t.secret.noData}
                         </div>
                     )}
                 </div>

@@ -50,12 +50,12 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <TrendingUp size={20} className="text-blue-500 dark:text-blue-400" />
-                    {t.common?.metadata || 'Metadata'}
+                    {t.common.metadata}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Name</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.common.name}</label>
                         <input
                             type="text"
                             value={data.metadata.name}
@@ -64,7 +64,7 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Namespace</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.common.namespace}</label>
                         <input
                             type="text"
                             value={data.metadata.namespace}
@@ -79,17 +79,17 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Target size={20} className="text-purple-500 dark:text-purple-400" />
-                    Scale Target
+                    {t.hpa.scaleTarget}
                 </h3>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 space-y-4">
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Specify the resource to scale (Deployment, StatefulSet, etc.)
+                        {t.hpa.scaleTargetHint}
                     </p>
 
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Kind</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.hpa.kind}</label>
                             <select
                                 value={data.spec.scaleTargetRef.kind}
                                 onChange={(e) => handleScaleTargetChange('kind', e.target.value)}
@@ -101,7 +101,7 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
                             </select>
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Resource Name</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.hpa.resourceName}</label>
                             <input
                                 type="text"
                                 value={data.spec.scaleTargetRef.name}
@@ -118,12 +118,12 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <TrendingUp size={20} className="text-green-500 dark:text-green-400" />
-                    Scaling Configuration
+                    {t.hpa.scalingConfig}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Min Replicas</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.hpa.minReplicas}</label>
                         <input
                             type="number"
                             min="1"
@@ -131,10 +131,10 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
                             onChange={(e) => handleSpecChange('minReplicas', parseInt(e.target.value) || 1)}
                             className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
-                        <p className="mt-1 text-xs text-slate-500">Minimum number of replicas</p>
+                        <p className="mt-1 text-xs text-slate-500">{t.hpa.minReplicasHint}</p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Max Replicas</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.hpa.maxReplicas}</label>
                         <input
                             type="number"
                             min={data.spec.minReplicas}
@@ -142,13 +142,13 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
                             onChange={(e) => handleSpecChange('maxReplicas', parseInt(e.target.value) || 1)}
                             className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
-                        <p className="mt-1 text-xs text-slate-500">Maximum number of replicas</p>
+                        <p className="mt-1 text-xs text-slate-500">{t.hpa.maxReplicasHint}</p>
                     </div>
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Target CPU Utilization (%)
+                        {t.hpa.targetCPU}
                         <span className="text-xs text-slate-500 ml-1">(optional)</span>
                     </label>
                     <input
@@ -161,7 +161,7 @@ export const HPAForm: React.FC<Props> = ({ data, onChange }) => {
                         className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                     <p className="mt-1 text-xs text-slate-500">
-                        Scale up when average CPU usage exceeds this percentage
+                        {t.hpa.targetCPUHint}
                     </p>
                 </div>
             </div>

@@ -302,6 +302,99 @@ export const cronJobSchema = z.object({
     }),
 });
 
+/**
+ * Job 资源验证
+ */
+export const jobSchema = z.object({
+    apiVersion: z.string(),
+    kind: z.literal('Job'),
+    metadata: metadataSchema,
+    spec: z.object({
+        completions: z.number().min(1).int().optional(),
+        parallelism: z.number().min(1).int().optional(),
+        backoffLimit: z.number().min(0).int().optional(),
+        template: z.object({
+            spec: z.object({
+                containers: z.array(containerSchema).min(1, '至少需要一个容器'),
+                restartPolicy: z.enum(['Never', 'OnFailure']),
+                imagePullSecrets: z.array(z.object({ name: z.string() })).optional(),
+            }),
+        }),
+    }),
+});
+
+/**
+ * DaemonSet 资源验证
+ */
+export const daemonSetSchema = z.object({
+    apiVersion: z.string(),
+    kind: z.literal('DaemonSet'),
+    metadata: metadataSchema,
+    spec: z.object({
+        selector: z.object({
+            matchLabels: z.record(z.string(), z.string()),
+        }),
+        template: z.object({
+            metadata: z.object({
+                labels: z.record(z.string(), z.string()),
+            }),
+            spec: z.object({
+                containers: z.array(containerSchema).min(1, '至少需要一个容器'),
+                initContainers: z.array(containerSchema).optional(),
+                volumes: z.array(z.any()).optional(),
+                imagePullSecrets: z.array(z.object({ name: z.string() })).optional(),
+            }),
+        }),
+    }),
+});
+
+/**
+ * StatefulSet 资源验证
+ */
+export const statefulSetSchema = z.object({
+    apiVersion: z.string(),
+    kind: z.literal('StatefulSet'),
+    metadata: metadataSchema,
+    spec: z.object({
+        serviceName: z.string().min(1, '服务名称不能为空'),
+        replicas: replicasSchema,
+        selector: z.object({
+            matchLabels: z.record(z.string(), z.string()),
+        }),
+        template: z.object({
+            metadata: z.object({
+                labels: z.record(z.string(), z.string()),
+            }),
+            spec: z.object({
+                containers: z.array(containerSchema).min(1, '至少需要一个容器'),
+                initContainers: z.array(containerSchema).optional(),
+                volumes: z.array(z.any()).optional(),
+                imagePullSecrets: z.array(z.object({ name: z.string() })).optional(),
+            }),
+        }),
+        volumeClaimTemplates: z.array(z.any()).optional(),
+    }),
+});
+
+/**
+ * HPA (HorizontalPodAutoscaler) 资源验证
+ */
+export const hpaSchema = z.object({
+    apiVersion: z.string(),
+    kind: z.literal('HorizontalPodAutoscaler'),
+    metadata: metadataSchema,
+    spec: z.object({
+        scaleTargetRef: z.object({
+            apiVersion: z.string().optional(),
+            kind: z.string().min(1, '目标资源类型不能为空'),
+            name: z.string().min(1, '目标资源名称不能为空'),
+        }),
+        minReplicas: z.number().min(1).int(),
+        maxReplicas: z.number().min(1).int(),
+        targetCPUUtilizationPercentage: z.number().min(1).max(100).int().optional(),
+    }),
+});
+
 // ============ 导出类型 ============
 
 export type DeploymentSchema = z.infer<typeof deploymentSchema>;
@@ -311,6 +404,10 @@ export type SecretSchema = z.infer<typeof secretSchema>;
 export type IngressSchema = z.infer<typeof ingressSchema>;
 export type PVCSchema = z.infer<typeof pvcSchema>;
 export type CronJobSchema = z.infer<typeof cronJobSchema>;
+export type JobSchema = z.infer<typeof jobSchema>;
+export type DaemonSetSchema = z.infer<typeof daemonSetSchema>;
+export type StatefulSetSchema = z.infer<typeof statefulSetSchema>;
+export type HPASchema = z.infer<typeof hpaSchema>;
 
 // ============ 验证辅助函数 ============
 

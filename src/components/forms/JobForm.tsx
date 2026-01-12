@@ -61,12 +61,12 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Play size={20} className="text-blue-500 dark:text-blue-400" />
-                    {t.form?.metadata || 'Metadata'}
+                    {t.common.metadata}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Name</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.common.name}</label>
                         <input
                             type="text"
                             value={data.metadata.name}
@@ -75,7 +75,7 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Namespace</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.common.namespace}</label>
                         <input
                             type="text"
                             value={data.metadata.namespace}
@@ -90,13 +90,13 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Play size={20} className="text-purple-500 dark:text-purple-400" />
-                    Job Configuration
+                    {t.job.configuration}
                 </h3>
 
                 <div className="grid grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Completions
+                            {t.job.completions}
                             <span className="text-xs text-slate-500 ml-1">(optional)</span>
                         </label>
                         <input
@@ -107,11 +107,11 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                             placeholder="1"
                             className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
-                        <p className="mt-1 text-xs text-slate-500">Number of successful completions</p>
+                        <p className="mt-1 text-xs text-slate-500">{t.job.completionsHint}</p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Parallelism
+                            {t.job.parallelism}
                             <span className="text-xs text-slate-500 ml-1">(optional)</span>
                         </label>
                         <input
@@ -122,11 +122,11 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                             placeholder="1"
                             className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
-                        <p className="mt-1 text-xs text-slate-500">Max parallel pods</p>
+                        <p className="mt-1 text-xs text-slate-500">{t.job.parallelismHint}</p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Backoff Limit
+                            {t.job.backoffLimit}
                             <span className="text-xs text-slate-500 ml-1">(optional)</span>
                         </label>
                         <input
@@ -137,12 +137,12 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                             placeholder="6"
                             className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
-                        <p className="mt-1 text-xs text-slate-500">Retry limit before failure</p>
+                        <p className="mt-1 text-xs text-slate-500">{t.job.backoffLimitHint}</p>
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Restart Policy</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.job.restartPolicy}</label>
                     <select
                         value={data.spec.template.spec.restartPolicy}
                         onChange={(e) => handleTemplateSpecChange('restartPolicy', e.target.value)}
@@ -152,7 +152,7 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                         <option value="OnFailure">OnFailure</option>
                     </select>
                     <p className="mt-1 text-xs text-slate-500">
-                        Never: Don't restart on failure | OnFailure: Restart on failure
+                        {t.job.restartPolicyHint}
                     </p>
                 </div>
             </div>
@@ -161,12 +161,12 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Box size={20} className="text-green-500 dark:text-green-400" />
-                    Container
+                    {t.job.container}
                 </h3>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Container Name</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.job.containerName}</label>
                         <input
                             type="text"
                             value={container.name}
@@ -177,7 +177,7 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Image</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.deploy.image}</label>
                             <input
                                 type="text"
                                 value={container.image}
@@ -187,7 +187,7 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Image Pull Policy</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.deploy.pullPolicy}</label>
                             <select
                                 value={container.imagePullPolicy}
                                 onChange={(e) => handleContainerChange(0, 'imagePullPolicy', e.target.value)}
@@ -201,7 +201,7 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Command (JSON Array)</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.job.commandJson}</label>
                         <input
                             type="text"
                             value={JSON.stringify(container.command || [])}
@@ -222,14 +222,14 @@ export const JobForm: React.FC<Props> = ({ data, onChange }) => {
                                 className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                                 onClick={() => handleContainerChange(0, 'command', ["/bin/sh", "-c", "echo 'Job completed successfully'"])}
                             >
-                                Set Example
+                                {t.job.setExample}
                             </button>
                             <button
                                 type="button"
                                 className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                                 onClick={() => handleContainerChange(0, 'command', undefined)}
                             >
-                                Clear
+                                {t.job.clear}
                             </button>
                         </div>
                     </div>

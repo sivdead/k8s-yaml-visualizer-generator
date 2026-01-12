@@ -7,6 +7,10 @@ import {
     ingressSchema,
     pvcSchema,
     cronJobSchema,
+    jobSchema,
+    daemonSetSchema,
+    statefulSetSchema,
+    hpaSchema,
 } from '../validation/schemas';
 import { K8sResource, ResourceType } from '../types';
 
@@ -43,6 +47,14 @@ const getSchemaForKind = (kind: string): z.ZodType | null => {
             return pvcSchema;
         case 'CronJob':
             return cronJobSchema;
+        case 'Job':
+            return jobSchema;
+        case 'DaemonSet':
+            return daemonSetSchema;
+        case 'StatefulSet':
+            return statefulSetSchema;
+        case 'HorizontalPodAutoscaler':
+            return hpaSchema;
         default:
             return null;
     }
@@ -135,6 +147,84 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
         }
     }
 
+    // DaemonSet 和 StatefulSet 特定检查（容器检查类似 Deployment）
+    if (resource.kind === 'DaemonSet' || resource.kind === 'StatefulSet') {
+        const workload = resource as any;
+        const containers = workload.spec?.template?.spec?.containers || [];
+
+        containers.forEach((container: any, idx: number) => {
+            if (!container.resources?.limits) {
+                warnings.push({
+                    path: `spec.template.spec.containers[${idx}].resources.limits`,
+                    message: '',
+                    messageKey: 'missingLimits',
+                    messageParams: { name: container.name },
+                    severity: 'warning',
+                });
+            }
+            if (!container.resources?.requests) {
+                warnings.push({
+                    path: `spec.template.spec.containers[${idx}].resources.requests`,
+                    message: '',
+                    messageKey: 'missingRequests',
+                    messageParams: { name: container.name },
+                    severity: 'warning',
+                });
+            }
+
+            // 检查健康检查
+            if (!container.livenessProbe && !container.readinessProbe) {
+                warnings.push({
+                    path: `spec.template.spec.containers[${idx}]`,
+                    message: '',
+                    messageKey: 'missingProbes',
+                    messageParams: { name: container.name },
+                    severity: 'warning',
+                });
+            }
+
+            // 检查镜像标签
+            if (container.image && (container.image.endsWith(':latest') || !container.image.includes(':'))) {
+                warnings.push({
+                    path: `spec.template.spec.containers[${idx}].image`,
+                    message: '',
+                    messageKey: 'latestTag',
+                    messageParams: { name: container.name },
+                    severity: 'warning',
+                });
+            }
+        });
+
+        // StatefulSet 特定：检查副本数
+        if (resource.kind === 'StatefulSet' && workload.spec?.replicas === 1) {
+            warnings.push({
+                path: 'spec.replicas',
+                message: '',
+                messageKey: 'singleReplica',
+                severity: 'warning',
+            });
+        }
+    }
+
+    // Job 特定检查
+    if (resource.kind === 'Job') {
+        const job = resource as any;
+        const containers = job.spec?.template?.spec?.containers || [];
+
+        containers.forEach((container: any, idx: number) => {
+            // 检查镜像标签
+            if (container.image && (container.image.endsWith(':latest') || !container.image.includes(':'))) {
+                warnings.push({
+                    path: `spec.template.spec.containers[${idx}].image`,
+                    message: '',
+                    messageKey: 'latestTag',
+                    messageParams: { name: container.name },
+                    severity: 'warning',
+                });
+            }
+        });
+    }
+
     // Service 特定检查
     if (resource.kind === 'Service') {
         const service = resource as any;
@@ -174,7 +264,15 @@ export const validateK8sResource = (resource: K8sResource): ValidationResult => 
     // 获取对应的 schema
     const schema = getSchemaForKind(resource.kind);
 
-    if (!schema) {
+    // 已知的资源类型列表（包括有 schema 和暂时没有 schema 的）
+    const knownKinds = [
+        'Deployment', 'Service', 'ConfigMap', 'Secret', 'Ingress',
+        'PersistentVolumeClaim', 'CronJob', 'Job', 'DaemonSet',
+        'StatefulSet', 'HorizontalPodAutoscaler'
+    ];
+
+    // 如果是未知的资源类型，返回警告
+    if (!knownKinds.includes(resource.kind)) {
         return {
             valid: true,
             errors: [],
@@ -185,6 +283,16 @@ export const validateK8sResource = (resource: K8sResource): ValidationResult => 
                 messageParams: { kind: resource.kind },
                 severity: 'warning',
             }],
+        };
+    }
+
+    // 如果没有 schema，跳过结构验证（但仍然进行最佳实践检查）
+    if (!schema) {
+        warnings.push(...checkBestPractices(resource));
+        return {
+            valid: true,
+            errors: [],
+            warnings,
         };
     }
 
@@ -223,6 +331,10 @@ export const getResourceTypeFromKind = (kind: string): ResourceType | null => {
         'Ingress': 'ingress',
         'PersistentVolumeClaim': 'pvc',
         'CronJob': 'cronjob',
+        'Job': 'job',
+        'DaemonSet': 'daemonset',
+        'StatefulSet': 'statefulset',
+        'HorizontalPodAutoscaler': 'hpa',
     };
     return mapping[kind] || null;
 };
