@@ -8,6 +8,7 @@ import { useFormValidation, validators } from '../../hooks/useFormValidation';
 import { FormField, ValidatedInput } from './shared/FormField';
 import { CommentSection } from './shared/CommentSection';
 import { ContainerSection } from './ContainerSection';
+import { LabelsAnnotationsSection } from './shared/LabelsAnnotationsSection';
 
 interface Props {
   data: DeploymentResource;
@@ -35,10 +36,67 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
 
   // --- Helper Functions ---
 
+  /**
+   * 更新 name 并同步更新所有相关的 labels
+   */
+  const updateName = (newName: string) => {
+    const oldAppLabel = data.metadata.labels?.app || data.metadata.name;
+    const newLabels = { ...data.metadata.labels, app: newName };
+    const newMatchLabels = { ...data.spec.selector.matchLabels, app: newName };
+    const newTemplateLabels = { ...data.spec.template.metadata.labels, app: newName };
+
+    onChange({
+      ...data,
+      metadata: {
+        ...data.metadata,
+        name: newName,
+        labels: newLabels,
+      },
+      spec: {
+        ...data.spec,
+        selector: {
+          ...data.spec.selector,
+          matchLabels: newMatchLabels,
+        },
+        template: {
+          ...data.spec.template,
+          metadata: {
+            ...data.spec.template.metadata,
+            labels: newTemplateLabels,
+          },
+        },
+      },
+    });
+  };
+
   const updateMeta = (field: string, value: string) => {
+    if (field === 'name') {
+      updateName(value);
+      return;
+    }
     onChange({
       ...data,
       metadata: { ...data.metadata, [field]: value }
+    });
+  };
+
+  /**
+   * 更新 metadata.labels（保留系统标签）
+   */
+  const updateLabels = (labels: Record<string, string>) => {
+    onChange({
+      ...data,
+      metadata: { ...data.metadata, labels },
+    });
+  };
+
+  /**
+   * 更新 metadata.annotations
+   */
+  const updateAnnotations = (annotations: Record<string, string> | undefined) => {
+    onChange({
+      ...data,
+      metadata: { ...data.metadata, annotations },
     });
   };
 
@@ -247,6 +305,17 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
             />
           </FormField>
         </div>
+      </CollapsibleSection>
+
+      {/* Labels & Annotations */}
+      <CollapsibleSection title={t.common.labels || 'Labels & Annotations'} icon={<Box size={20} />} defaultOpen={false}>
+        <LabelsAnnotationsSection
+          labels={data.metadata.labels}
+          annotations={data.metadata.annotations}
+          onLabelsChange={updateLabels}
+          onAnnotationsChange={updateAnnotations}
+          systemLabels={{ app: data.metadata.name }}
+        />
       </CollapsibleSection>
 
       <CollapsibleSection title={t.deploy.specs} icon={<Layers size={20} />} defaultOpen={true}>

@@ -20,6 +20,7 @@ import { ExportModal } from './components/modals/ExportModal';
 import { YamlPreview } from './components/YamlPreview';
 import { ValidationPanel } from './components/ValidationPanel';
 import { ToastContainer } from './components/ToastContainer';
+import { TopologyView } from './components/topology';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AppContextProvider, useTheme, useToast } from './contexts/AppContext';
 import {
@@ -44,7 +45,9 @@ import {
   Play,
   Server,
   Database,
-  TrendingUp
+  TrendingUp,
+  Network,
+  LayoutGrid
 } from 'lucide-react';
 
 interface SavedConfig {
@@ -70,11 +73,14 @@ const AppContent = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [configName, setConfigName] = useState('');
+  const [viewMode, setViewMode] = useState<'form' | 'topology'>('form');
+  const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
 
   // Resizable Preview State
   const [previewWidth, setPreviewWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+  const [isConfigsLoaded, setIsConfigsLoaded] = useState(false);
 
   // Load saved configs on mount
   useEffect(() => {
@@ -86,12 +92,15 @@ const AppContent = () => {
         console.error("Failed to load saved configs", e);
       }
     }
+    setIsConfigsLoaded(true);
   }, []);
 
-  // Sync saved configs to localStorage
+  // Sync saved configs to localStorage (only after initial load)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedConfigs));
-  }, [savedConfigs]);
+    if (isConfigsLoaded) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedConfigs));
+    }
+  }, [savedConfigs, isConfigsLoaded]);
 
   // Update YAML when form data changes
   useEffect(() => {
@@ -146,6 +155,8 @@ const AppContent = () => {
 
   const handleTypeChange = (type: ResourceType) => {
     setResourceType(type);
+    setEditingConfigId(null);
+    setConfigName('');
     switch (type) {
       case 'deployment': setFormData(defaultDeployment); break;
       case 'service': setFormData(defaultService); break;
@@ -173,21 +184,44 @@ const AppContent = () => {
 
   const handleSaveConfig = () => {
     if (!configName.trim()) return;
-    const newConfig: SavedConfig = {
-      id: Date.now().toString(),
-      name: configName.trim(),
-      type: resourceType,
-      data: JSON.parse(JSON.stringify(formData)), // Deep copy
-      timestamp: Date.now()
-    };
-    setSavedConfigs([newConfig, ...savedConfigs]);
+
+    if (editingConfigId) {
+      // Update existing config
+      setSavedConfigs(savedConfigs.map(c =>
+        c.id === editingConfigId
+          ? {
+            ...c,
+            name: configName.trim(),
+            type: resourceType,
+            data: JSON.parse(JSON.stringify(formData)),
+            timestamp: Date.now()
+          }
+          : c
+      ));
+      addToast(t.common.updated || 'Configuration updated', 'success');
+    } else {
+      // Create new config
+      const newConfig: SavedConfig = {
+        id: Date.now().toString(),
+        name: configName.trim(),
+        type: resourceType,
+        data: JSON.parse(JSON.stringify(formData)),
+        timestamp: Date.now()
+      };
+      setSavedConfigs([newConfig, ...savedConfigs]);
+      addToast(t.common.saved || 'Configuration saved', 'success');
+    }
+
     setIsSaveModalOpen(false);
     setConfigName('');
+    setEditingConfigId(null);
   };
 
   const loadConfig = (config: SavedConfig) => {
     setResourceType(config.type);
     setFormData(config.data);
+    setEditingConfigId(config.id);
+    setConfigName(config.name);
   };
 
   const handleImport = (yamlContent: string) => {
@@ -311,10 +345,33 @@ const AppContent = () => {
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
         <header className={`border-b p-4 flex justify-between items-center shadow-sm z-10 flex-shrink-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <h1 className={`text-xl font-semibold capitalize ${isDark ? 'text-white' : 'text-slate-800'}`}>
-              {t.nav[resourceType]} {t.header.config}
+              {viewMode === 'form' ? `${t.nav[resourceType]} ${t.header.config}` : (language === 'zh' ? '资源拓扑' : 'Resource Topology')}
             </h1>
+            {/* View Mode Toggle */}
+            <div className={`flex rounded-lg border overflow-hidden ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+              <button
+                onClick={() => setViewMode('form')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'form'
+                  ? 'bg-blue-600 text-white'
+                  : isDark ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+              >
+                <LayoutGrid size={14} />
+                {language === 'zh' ? '表单' : 'Form'}
+              </button>
+              <button
+                onClick={() => setViewMode('topology')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'topology'
+                  ? 'bg-blue-600 text-white'
+                  : isDark ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+              >
+                <Network size={14} />
+                {language === 'zh' ? '拓扑' : 'Topology'}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -371,48 +428,61 @@ const AppContent = () => {
 
         {/* Content Split */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+          {viewMode === 'form' ? (
+            <>
+              {/* Form Area */}
+              <div className={`flex-1 overflow-y-auto p-6 min-w-[320px] custom-scrollbar ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
+                <div className={`max-w-3xl mx-auto rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                  {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} />}
+                  {isService(formData) && <ServiceForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                  {isConfigMap(formData) && <ConfigMapForm data={formData} onChange={setFormData} />}
+                  {isIngress(formData) && <IngressForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                  {isPVC(formData) && <PVCForm data={formData} onChange={setFormData} />}
+                  {isSecret(formData) && <SecretForm data={formData} onChange={setFormData} />}
+                  {isCronJob(formData) && <CronJobForm data={formData} onChange={setFormData} />}
+                  {isJob(formData) && <JobForm data={formData} onChange={setFormData} />}
+                  {isDaemonSet(formData) && <DaemonSetForm data={formData} onChange={setFormData} />}
+                  {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} />}
+                  {isHPA(formData) && <HPAForm data={formData} onChange={setFormData} />}
+                </div>
+              </div>
 
-          {/* Form Area */}
-          <div className={`flex-1 overflow-y-auto p-6 min-w-[320px] custom-scrollbar ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
-            <div className={`max-w-3xl mx-auto rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-              {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} />}
-              {isService(formData) && <ServiceForm data={formData} onChange={setFormData} />}
-              {isConfigMap(formData) && <ConfigMapForm data={formData} onChange={setFormData} />}
-              {isIngress(formData) && <IngressForm data={formData} onChange={setFormData} />}
-              {isPVC(formData) && <PVCForm data={formData} onChange={setFormData} />}
-              {isSecret(formData) && <SecretForm data={formData} onChange={setFormData} />}
-              {isCronJob(formData) && <CronJobForm data={formData} onChange={setFormData} />}
-              {isJob(formData) && <JobForm data={formData} onChange={setFormData} />}
-              {isDaemonSet(formData) && <DaemonSetForm data={formData} onChange={setFormData} />}
-              {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} />}
-              {isHPA(formData) && <HPAForm data={formData} onChange={setFormData} />}
-            </div>
-          </div>
+              {/* Resizer Handle */}
+              <div
+                className="hidden lg:flex w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-500 cursor-col-resize items-center justify-center transition-all z-20 flex-shrink-0 border-l border-slate-200"
+                onMouseDown={startResizing}
+              >
+              </div>
 
-          {/* Resizer Handle */}
-          <div
-            className="hidden lg:flex w-1 hover:w-1.5 bg-slate-200 hover:bg-blue-500 cursor-col-resize items-center justify-center transition-all z-20 flex-shrink-0 border-l border-slate-200"
-            onMouseDown={startResizing}
-          >
-          </div>
-
-          {/* Preview Area */}
-          <div
-            className={`flex-shrink-0 flex flex-col overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}
-            style={{ width: isDesktop ? previewWidth : '100%' }}
-          >
-            {/* Validation Panel */}
-            <div className="flex-shrink-0 p-3 border-b border-slate-200 dark:border-slate-700">
-              <ValidationPanel resource={formData} showDetails={true} />
-            </div>
-            {/* YAML Preview */}
-            <div className="flex-1 overflow-hidden">
-              <YamlPreview
-                code={yamlOutput}
-                filename={`${formData.metadata.name}.yaml`}
-              />
-            </div>
-          </div>
+              {/* Preview Area */}
+              <div
+                className={`flex-shrink-0 flex flex-col overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}
+                style={{ width: isDesktop ? previewWidth : '100%' }}
+              >
+                {/* Validation Panel */}
+                <div className="flex-shrink-0 p-3 border-b border-slate-200 dark:border-slate-700">
+                  <ValidationPanel resource={formData} showDetails={true} />
+                </div>
+                {/* YAML Preview */}
+                <div className="flex-1 overflow-hidden">
+                  <YamlPreview
+                    code={yamlOutput}
+                    filename={`${formData.metadata.name}.yaml`}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Topology View */
+            <TopologyView
+              resources={savedConfigs.map(c => c.data)}
+              onNodeClick={(resource, type) => {
+                setResourceType(type);
+                setFormData(resource);
+                setViewMode('form');
+              }}
+            />
+          )}
         </div>
       </main>
 
@@ -447,7 +517,7 @@ const AppContent = () => {
                 disabled={!configName.trim()}
                 className="w-full py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                {t.header.saveBtn}
+                {editingConfigId ? (t.common.updateBtn || 'Update') : t.header.saveBtn}
               </button>
             </div>
           </div>

@@ -1,19 +1,32 @@
 
-import React, { useState, useEffect } from 'react';
-import { IngressResource } from '../../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { IngressResource, K8sResource, ServiceResource } from '../../types';
 import { Input, Label, Select, SectionTitle } from '../FormComponents';
-import { Globe, Trash2, Plus, Route, Server, Tag } from 'lucide-react';
+import { Globe, Trash2, Plus, Route, Server, Tag, Zap } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { CommentSection } from './shared/CommentSection';
+import { isService } from '../../utils/typeGuards';
 
 interface Props {
   data: IngressResource;
   onChange: (data: IngressResource) => void;
+  /** 已保存的资源列表，用于智能关联 */
+  savedResources?: K8sResource[];
 }
 
-export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
+export const IngressForm: React.FC<Props> = ({ data, onChange, savedResources = [] }) => {
   const { t } = useLanguage();
   const [annotations, setAnnotations] = useState<{ key: string; value: string }[]>([]);
+
+  // 获取所有可选择的 Service
+  const serviceOptions = useMemo(() => {
+    return savedResources
+      .filter(r => isService(r))
+      .map(r => ({
+        name: r.metadata.name,
+        ports: (r as ServiceResource).spec.ports.map(p => p.port),
+      }));
+  }, [savedResources]);
 
   // Sync annotations from props to local state on load
   useEffect(() => {
@@ -250,10 +263,40 @@ export const IngressForm: React.FC<Props> = ({ data, onChange }) => {
                     </Select>
                   </div>
                   <div className="col-span-3">
-                    <Label>{t.ingress.serviceName}</Label>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label>{t.ingress.serviceName}</Label>
+                      {serviceOptions.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Zap size={12} className="text-blue-500" />
+                          <select
+                            className="text-xs px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 focus:outline-none"
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                const svc = serviceOptions.find(s => s.name === e.target.value);
+                                if (svc) {
+                                  updatePath(rIdx, pIdx, 'serviceName', svc.name);
+                                  if (svc.ports.length > 0) {
+                                    updatePath(rIdx, pIdx, 'servicePort', svc.ports[0]);
+                                  }
+                                }
+                              }
+                            }}
+                          >
+                            <option value="">⚡ Select</option>
+                            {serviceOptions.map((svc, idx) => (
+                              <option key={idx} value={svc.name}>
+                                {svc.name} (:{svc.ports.join(', :')})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
                     <Input
                       value={path.backend.service.name}
                       onChange={(e) => updatePath(rIdx, pIdx, 'serviceName', e.target.value)}
+                      placeholder="my-service"
                     />
                   </div>
                   <div className="col-span-2">

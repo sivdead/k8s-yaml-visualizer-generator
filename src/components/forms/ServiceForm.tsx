@@ -1,19 +1,42 @@
 
-import React, { useState } from 'react';
-import { ServiceResource } from '../../types';
+import React, { useState, useMemo } from 'react';
+import { ServiceResource, K8sResource, DeploymentResource, StatefulSetResource, DaemonSetResource } from '../../types';
 import { Input, Label, Select, SectionTitle } from '../FormComponents';
-import { Network, Activity, Plus, Trash2, Globe } from 'lucide-react';
+import { Network, Activity, Plus, Trash2, Globe, Zap } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { CommentSection } from './shared/CommentSection';
+import { isDeployment, isStatefulSet, isDaemonSet } from '../../utils/typeGuards';
 
 interface Props {
   data: ServiceResource;
   onChange: (data: ServiceResource) => void;
+  /** 已保存的资源列表，用于智能关联 */
+  savedResources?: K8sResource[];
 }
 
-export const ServiceForm: React.FC<Props> = ({ data, onChange }) => {
+/** 从工作负载中提取 template labels */
+function getWorkloadLabels(resource: K8sResource): Record<string, string> | null {
+  if (isDeployment(resource) || isStatefulSet(resource) || isDaemonSet(resource)) {
+    return (resource as DeploymentResource | StatefulSetResource | DaemonSetResource).spec.template.metadata.labels;
+  }
+  return null;
+}
+
+export const ServiceForm: React.FC<Props> = ({ data, onChange, savedResources = [] }) => {
   const { t } = useLanguage();
   const [newIP, setNewIP] = useState('');
+
+  // 获取所有可选择的工作负载及其 labels
+  const workloadOptions = useMemo(() => {
+    return savedResources
+      .filter(r => isDeployment(r) || isStatefulSet(r) || isDaemonSet(r))
+      .map(r => ({
+        name: r.metadata.name,
+        kind: r.kind,
+        labels: getWorkloadLabels(r) || {},
+      }))
+      .filter(w => Object.keys(w.labels).length > 0);
+  }, [savedResources]);
 
   const updateMeta = (field: string, value: string) => {
     onChange({
@@ -106,6 +129,94 @@ export const ServiceForm: React.FC<Props> = ({ data, onChange }) => {
             <option value="NodePort">NodePort</option>
             <option value="LoadBalancer">LoadBalancer</option>
           </Select>
+        </div>
+      </div>
+
+      {/* Selector Section */}
+      <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Activity size={16} className="text-amber-600 dark:text-amber-400" />
+            <h4 className="font-semibold text-slate-800 dark:text-slate-200">{t.service.selector || 'Pod Selector'}</h4>
+          </div>
+          {/* Quick Select Workload */}
+          {workloadOptions.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Zap size={14} className="text-blue-500" />
+              <select
+                className="text-xs px-2 py-1 rounded border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                value=""
+                onChange={(e) => {
+                  const selected = workloadOptions.find(w => `${w.kind}/${w.name}` === e.target.value);
+                  if (selected) {
+                    updateSpec('selector', { ...selected.labels });
+                  }
+                }}
+              >
+                <option value="">{t.service.selectWorkload || '⚡ Quick Select Workload'}</option>
+                {workloadOptions.map((w, idx) => (
+                  <option key={idx} value={`${w.kind}/${w.name}`}>
+                    {w.kind}: {w.name} ({Object.entries(w.labels).map(([k, v]) => `${k}=${v}`).join(', ')})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+          {t.service.selectorHint || 'Labels to match backend Pods. Use Quick Select to auto-fill from saved workloads.'}
+        </p>
+        <div className="space-y-2">
+          {Object.entries(data.spec.selector || {}).map(([key, value], idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <Input
+                placeholder="Key"
+                value={key}
+                onChange={(e) => {
+                  const newSelector = { ...data.spec.selector };
+                  const oldValue = newSelector[key];
+                  delete newSelector[key];
+                  if (e.target.value) {
+                    newSelector[e.target.value] = oldValue;
+                  }
+                  updateSpec('selector', newSelector);
+                }}
+                className="flex-1"
+              />
+              <span className="text-slate-400">:</span>
+              <Input
+                placeholder="Value"
+                value={value}
+                onChange={(e) => {
+                  const newSelector = { ...data.spec.selector, [key]: e.target.value };
+                  updateSpec('selector', newSelector);
+                }}
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newSelector = { ...data.spec.selector };
+                  delete newSelector[key];
+                  updateSpec('selector', Object.keys(newSelector).length > 0 ? newSelector : { app: '' });
+                }}
+                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              const newKey = `label-${Object.keys(data.spec.selector || {}).length + 1}`;
+              updateSpec('selector', { ...data.spec.selector, [newKey]: '' });
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-800/30 dark:text-amber-300 dark:hover:bg-amber-800/50 rounded-md text-xs font-medium transition-colors border border-amber-300 dark:border-amber-700"
+          >
+            <Plus size={14} />
+            {t.service.addSelector || 'Add Selector'}
+          </button>
         </div>
       </div>
 

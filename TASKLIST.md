@@ -45,25 +45,25 @@
 
 ## 🗺️ 拓扑视图 (P2)
 
-> 已有 `components/topology` 空目录，待实现
+> 使用 @xyflow/react 实现资源关系可视化
 
-- [ ] 设计拓扑视图数据结构
-- [ ] 实现资源节点组件 (使用 @xyflow/react)
-- [ ] 自动生成资源间连接关系
+- [x] 设计拓扑视图数据结构
+- [x] 实现资源节点组件 (使用 @xyflow/react)
+- [x] 自动生成资源间连接关系
   - Deployment → Service (通过 selector)
   - Service → Ingress (通过 backend)
   - Deployment → ConfigMap/Secret (通过 env/volume 引用)
   - Deployment → PVC (通过 volume)
-- [ ] 支持从拓扑视图点击编辑资源
+- [x] 支持从拓扑视图点击编辑资源
 
 ---
 
 ## 📦 更多资源类型 (P2)
 
-- [ ] StatefulSet
-- [ ] DaemonSet
-- [ ] Job (单次任务)
-- [ ] HorizontalPodAutoscaler (HPA)
+- [x] StatefulSet
+- [x] DaemonSet
+- [x] Job (单次任务)
+- [x] HorizontalPodAutoscaler (HPA)
 - [ ] NetworkPolicy
 - [ ] ServiceAccount
 - [ ] Role / RoleBinding
@@ -86,8 +86,9 @@
 
 ## 🔗 智能关联 (P2)
 
-- [ ] 创建 Service 时自动建议关联已有 Deployment 的 selector
-- [ ] 创建 Ingress 时自动补全已有 Service 名称
+- [x] 创建 Service 时自动建议关联已有 Deployment 的 selector
+- [x] 创建 Ingress 时自动补全已有 Service 名称
+- [ ] Deployment 环境变量智能关联 ConfigMap/Secret
 - [ ] 统一管理项目中所有 Labels，支持复用
 - [ ] 批量修改多个资源的 namespace
 

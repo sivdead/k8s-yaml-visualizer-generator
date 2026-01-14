@@ -6,6 +6,7 @@ import { FileText, Plus, Trash2, Box } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { CommentSection } from './shared/CommentSection';
 import { useKeyValuePairs } from '../../hooks/useKeyValuePairs';
+import { LabelsAnnotationsSection } from './shared/LabelsAnnotationsSection';
 
 interface Props {
   data: ConfigMapResource;
@@ -13,7 +14,7 @@ interface Props {
 }
 
 export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const { entries, updateEntry, addEntry, removeEntry } = useKeyValuePairs(
     data.data,
@@ -25,6 +26,14 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
       ...data,
       metadata: { ...data.metadata, [field]: value }
     });
+  };
+
+  const updateLabels = (labels: Record<string, string>) => {
+    onChange({ ...data, metadata: { ...data.metadata, labels } });
+  };
+
+  const updateAnnotations = (annotations: Record<string, string> | undefined) => {
+    onChange({ ...data, metadata: { ...data.metadata, annotations } });
   };
 
   return (
@@ -49,6 +58,23 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
             onChange={(e) => updateMeta('namespace', e.target.value)}
           />
         </div>
+      </div>
+
+      {/* Labels & Annotations */}
+      <div className="mt-2">
+        <details className="group">
+          <summary className="cursor-pointer text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+            {language === 'zh' ? '▸ 标签与注解' : '▸ Labels & Annotations'}
+          </summary>
+          <div className="mt-3">
+            <LabelsAnnotationsSection
+              labels={data.metadata.labels}
+              annotations={data.metadata.annotations}
+              onLabelsChange={updateLabels}
+              onAnnotationsChange={updateAnnotations}
+            />
+          </div>
+        </details>
       </div>
 
       <SectionTitle title={t.configmap.data} icon={<FileText size={20} />} />
