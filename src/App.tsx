@@ -4,7 +4,7 @@ import { TemplateModal } from './components/modals/TemplateModal';
 
 
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation, Link, NavLink } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+
 
 import { toYaml, downloadYaml, parseYaml } from './services/yamlUtils';
 import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob, defaultJob, defaultDaemonSet, defaultStatefulSet, defaultHPA } from './services/templates';
