@@ -1,8 +1,8 @@
 {
   "projectName": "K8s YAML Generator",
   "domain": "sivd.dev",
-  "subdomain": "k8s",
-  "fullUrl": "https://k8s.sivd.dev",
+  "subdomain": "k8sgen",
+  "fullUrl": "https://k8sgen.sivd.dev",
   "owner": {
     "nickname": "sivdead",
     "name": "Jingwen",
