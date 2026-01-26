@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { DeploymentResource, EnvVar, EnvFromSource, Volume, Container, Probe, VolumeMount } from '../../types';
+import React, { useState, useMemo } from 'react';
+import { DeploymentResource, EnvVar, EnvFromSource, Volume, Container, Probe, VolumeMount, K8sResource, ConfigMapResource, SecretResource } from '../../types';
+import { isConfigMap, isSecret } from '../../utils/typeGuards';
 import { Input, Label, Select, CollapsibleSection } from '../FormComponents';
 import { Box, Layers, Plus, Trash2, Shield, Database, Key, Zap, Cpu } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -13,12 +14,33 @@ import { LabelsAnnotationsSection } from './shared/LabelsAnnotationsSection';
 interface Props {
   data: DeploymentResource;
   onChange: (data: DeploymentResource) => void;
+  /** 已保存的资源列表，用于智能关联 */
+  savedResources?: K8sResource[];
 }
 
-export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
+export const DeploymentForm: React.FC<Props> = ({ data, onChange, savedResources = [] }) => {
   const { t } = useLanguage();
   const { addToast } = useToast();
   const { validate, touch, getError, hasError } = useFormValidation();
+
+  // Compute available ConfigMaps and Secrets for smart selection
+  const configMapOptions = useMemo(() =>
+    savedResources
+      .filter(isConfigMap)
+      .map(r => ({
+        name: r.metadata.name,
+        keys: Object.keys((r as ConfigMapResource).data || {})
+      }))
+    , [savedResources]);
+
+  const secretOptions = useMemo(() =>
+    savedResources
+      .filter(isSecret)
+      .map(r => ({
+        name: r.metadata.name,
+        keys: Object.keys((r as SecretResource).data || {})
+      }))
+    , [savedResources]);
 
   // Volume State (Pod level)
   const [newVolName, setNewVolName] = useState('');
@@ -358,6 +380,8 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
               onUpdateProbe={updateProbe}
               onRemove={removeContainer}
               canRemove={true}
+              availableConfigMaps={configMapOptions}
+              availableSecrets={secretOptions}
             />
           ))}
           {initContainers.length === 0 && (
@@ -400,6 +424,8 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange }) => {
               onUpdateProbe={updateProbe}
               onRemove={removeContainer}
               canRemove={containers.length > 1}
+              availableConfigMaps={configMapOptions}
+              availableSecrets={secretOptions}
             />
           ))}
         </div>

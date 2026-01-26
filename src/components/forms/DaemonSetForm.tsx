@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { DaemonSetResource, EnvVar, EnvFromSource, Volume, Container, Probe, VolumeMount } from '../../types';
+import React, { useState, useMemo } from 'react';
+import { DaemonSetResource, EnvVar, EnvFromSource, Volume, Container, Probe, VolumeMount, K8sResource, ConfigMapResource, SecretResource } from '../../types';
+import { isConfigMap, isSecret } from '../../utils/typeGuards';
 import { Input, Label, Select, CollapsibleSection } from '../FormComponents';
 import { Box, Server, Plus, Trash2, Database, Zap, Cpu } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -10,11 +11,32 @@ import { ContainerSection } from './ContainerSection';
 interface Props {
     data: DaemonSetResource;
     onChange: (data: DaemonSetResource) => void;
+    /** 已保存的资源列表，用于智能关联 */
+    savedResources?: K8sResource[];
 }
 
-export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
+export const DaemonSetForm: React.FC<Props> = ({ data, onChange, savedResources = [] }) => {
     const { t } = useLanguage();
     const { addToast } = useToast();
+
+    // Compute available ConfigMaps and Secrets for smart selection
+    const configMapOptions = useMemo(() =>
+        savedResources
+            .filter(isConfigMap)
+            .map(r => ({
+                name: r.metadata.name,
+                keys: Object.keys((r as ConfigMapResource).data || {})
+            }))
+        , [savedResources]);
+
+    const secretOptions = useMemo(() =>
+        savedResources
+            .filter(isSecret)
+            .map(r => ({
+                name: r.metadata.name,
+                keys: Object.keys((r as SecretResource).data || {})
+            }))
+        , [savedResources]);
 
     const [newVolName, setNewVolName] = useState('');
     const [newVolType, setNewVolType] = useState<'pvc' | 'configMap' | 'secret' | 'emptyDir' | 'hostPath'>('pvc');
@@ -266,6 +288,8 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
                             onUpdateProbe={updateProbe}
                             onRemove={removeContainer}
                             canRemove={true}
+                            availableConfigMaps={configMapOptions}
+                            availableSecrets={secretOptions}
                         />
                     ))}
                     {initContainers.length === 0 && (
@@ -308,6 +332,8 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange }) => {
                             onUpdateProbe={updateProbe}
                             onRemove={removeContainer}
                             canRemove={containers.length > 1}
+                            availableConfigMaps={configMapOptions}
+                            availableSecrets={secretOptions}
                         />
                     ))}
                 </div>

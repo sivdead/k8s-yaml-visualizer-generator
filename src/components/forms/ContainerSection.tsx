@@ -26,6 +26,10 @@ interface ContainerSectionProps {
     onUpdateProbe: (cIdx: number, probeType: 'livenessProbe' | 'readinessProbe', field: string, value: any) => void;
     onRemove: (type: 'containers' | 'initContainers', idx: number) => void;
     canRemove: boolean;
+    /** Available ConfigMaps for smart selection in env vars */
+    availableConfigMaps?: { name: string; keys: string[] }[];
+    /** Available Secrets for smart selection in env vars */
+    availableSecrets?: { name: string; keys: string[] }[];
 }
 
 /**
@@ -47,6 +51,8 @@ export const ContainerSection: React.FC<ContainerSectionProps> = ({
     onUpdateProbe,
     onRemove,
     canRemove,
+    availableConfigMaps = [],
+    availableSecrets = [],
 }) => {
     const { t } = useLanguage();
 
@@ -149,6 +155,8 @@ export const ContainerSection: React.FC<ContainerSectionProps> = ({
                         onRemoveEnvVar={onRemoveEnvVar}
                         onAddEnvFrom={onAddEnvFrom}
                         onRemoveEnvFrom={onRemoveEnvFrom}
+                        availableConfigMaps={availableConfigMaps}
+                        availableSecrets={availableSecrets}
                     />
 
                     {/* Volume Mounts */}

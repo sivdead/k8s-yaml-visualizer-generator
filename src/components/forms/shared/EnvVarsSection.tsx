@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, EnvVar, EnvFromSource } from '../../../types';
 import { Input, Select } from '../../FormComponents';
-import { Key, Plus, Trash2 } from 'lucide-react';
+import { Key, Plus, Trash2, Zap } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useToast } from '../../../contexts/AppContext';
 
@@ -13,6 +13,10 @@ interface EnvVarsSectionProps {
     onRemoveEnvVar: (type: 'containers' | 'initContainers', cIdx: number, eIdx: number) => void;
     onAddEnvFrom: (type: 'containers' | 'initContainers', cIdx: number, envFrom: EnvFromSource) => void;
     onRemoveEnvFrom: (type: 'containers' | 'initContainers', cIdx: number, eIdx: number) => void;
+    /** Available ConfigMaps for smart selection */
+    availableConfigMaps?: { name: string; keys: string[] }[];
+    /** Available Secrets for smart selection */
+    availableSecrets?: { name: string; keys: string[] }[];
 }
 
 /**
@@ -26,6 +30,8 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
     onRemoveEnvVar,
     onAddEnvFrom,
     onRemoveEnvFrom,
+    availableConfigMaps = [],
+    availableSecrets = [],
 }) => {
     const { t } = useLanguage();
     const { addToast } = useToast();
@@ -39,6 +45,18 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
     const [newEnvRefKey, setNewEnvRefKey] = useState('');
     const [newEnvFromName, setNewEnvFromName] = useState('');
     const [newEnvFromType, setNewEnvFromType] = useState<'configMap' | 'secret'>('configMap');
+
+    // Get available keys for the selected ConfigMap/Secret
+    const availableKeys = (() => {
+        if (newEnvType === 'configMap' && newEnvRefName) {
+            const cm = availableConfigMaps.find(c => c.name === newEnvRefName);
+            return cm?.keys || [];
+        } else if (newEnvType === 'secret' && newEnvRefName) {
+            const sec = availableSecrets.find(s => s.name === newEnvRefName);
+            return sec?.keys || [];
+        }
+        return [];
+    })();
 
     const handleAddEnvVar = () => {
         if (!newEnvName) {
@@ -157,14 +175,65 @@ export const EnvVarsSection: React.FC<EnvVarsSectionProps> = ({
                         </div>
                     ) : (
                         <>
+                            {/* ConfigMap/Secret Name with Smart Select */}
                             <div className="flex-1">
+                                <div className="flex items-center gap-1 mb-1">
+                                    {((newEnvType === 'configMap' && availableConfigMaps.length > 0) ||
+                                        (newEnvType === 'secret' && availableSecrets.length > 0)) && (
+                                            <div className="flex items-center gap-1">
+                                                <Zap size={12} className="text-blue-500" />
+                                                <select
+                                                    className="text-xs px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 focus:outline-none"
+                                                    value=""
+                                                    onChange={(e) => {
+                                                        if (e.target.value) {
+                                                            setNewEnvRefName(e.target.value);
+                                                            setNewEnvRefKey(''); // Reset key when name changes
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">⚡ {newEnvType === 'configMap' ? 'ConfigMap' : 'Secret'}</option>
+                                                    {(newEnvType === 'configMap' ? availableConfigMaps : availableSecrets).map((item, idx) => (
+                                                        <option key={idx} value={item.name}>
+                                                            {item.name} ({item.keys.length} keys)
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                </div>
                                 <Input
                                     placeholder={newEnvType === 'configMap' ? t.deploy.cmName : t.deploy.secName}
                                     value={newEnvRefName}
-                                    onChange={(e) => setNewEnvRefName(e.target.value)}
+                                    onChange={(e) => {
+                                        setNewEnvRefName(e.target.value);
+                                        setNewEnvRefKey(''); // Reset key when name changes
+                                    }}
                                 />
                             </div>
+                            {/* Key with Smart Select */}
                             <div className="flex-1">
+                                <div className="flex items-center gap-1 mb-1">
+                                    {availableKeys.length > 0 && (
+                                        <div className="flex items-center gap-1">
+                                            <Zap size={12} className="text-purple-500" />
+                                            <select
+                                                className="text-xs px-1.5 py-0.5 rounded border border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 focus:outline-none"
+                                                value=""
+                                                onChange={(e) => {
+                                                    if (e.target.value) {
+                                                        setNewEnvRefKey(e.target.value);
+                                                    }
+                                                }}
+                                            >
+                                                <option value="">⚡ Key</option>
+                                                {availableKeys.map((key, idx) => (
+                                                    <option key={idx} value={key}>{key}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
                                 <Input
                                     placeholder={t.deploy.cmKey}
                                     value={newEnvRefKey}

@@ -433,7 +433,7 @@ const AppContent = () => {
               {/* Form Area */}
               <div className={`flex-1 overflow-y-auto p-6 min-w-[320px] custom-scrollbar ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
                 <div className={`max-w-3xl mx-auto rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                  {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} />}
+                  {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
                   {isService(formData) && <ServiceForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
                   {isConfigMap(formData) && <ConfigMapForm data={formData} onChange={setFormData} />}
                   {isIngress(formData) && <IngressForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
@@ -441,8 +441,8 @@ const AppContent = () => {
                   {isSecret(formData) && <SecretForm data={formData} onChange={setFormData} />}
                   {isCronJob(formData) && <CronJobForm data={formData} onChange={setFormData} />}
                   {isJob(formData) && <JobForm data={formData} onChange={setFormData} />}
-                  {isDaemonSet(formData) && <DaemonSetForm data={formData} onChange={setFormData} />}
-                  {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} />}
+                  {isDaemonSet(formData) && <DaemonSetForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                  {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
                   {isHPA(formData) && <HPAForm data={formData} onChange={setFormData} />}
                 </div>
               </div>

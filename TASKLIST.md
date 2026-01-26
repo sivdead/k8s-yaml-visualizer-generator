@@ -88,7 +88,7 @@
 
 - [x] 创建 Service 时自动建议关联已有 Deployment 的 selector
 - [x] 创建 Ingress 时自动补全已有 Service 名称
-- [ ] Deployment 环境变量智能关联 ConfigMap/Secret
+- [x] Deployment 环境变量智能关联 ConfigMap/Secret
 - [ ] 统一管理项目中所有 Labels，支持复用
 - [ ] 批量修改多个资源的 namespace
 
