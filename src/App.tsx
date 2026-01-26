@@ -1,7 +1,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { TemplateModal } from './components/modals/TemplateModal';
+
+
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation, Link, NavLink } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+
 import { toYaml, downloadYaml, parseYaml } from './services/yamlUtils';
 import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob, defaultJob, defaultDaemonSet, defaultStatefulSet, defaultHPA } from './services/templates';
 import { ResourceType, K8sResource } from './types';
@@ -116,11 +120,11 @@ const SeoHead = ({ type }: { type: ResourceType }) => {
   };
 
   return (
-    <Helmet>
+    <>
       <title>{titles[type] || 'K8s YAML Generator'}</title>
       <meta name="description" content={descriptions[type] || 'Free online tool to generate Kubernetes YAML manifests instantly.'} />
       <link rel="canonical" href={`https://k8sgen.sivd.dev/${type}`} />
-    </Helmet>
+    </>
   );
 };
 
@@ -147,6 +151,7 @@ const AppContent = () => {
   const [configName, setConfigName] = useState('');
   const [viewMode, setViewMode] = useState<'form' | 'topology'>('form');
   const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   // Resizable Preview State
   const [previewWidth, setPreviewWidth] = useState(500);
@@ -338,6 +343,37 @@ const AppContent = () => {
     setSavedConfigs(savedConfigs.filter(c => c.id !== id));
   };
 
+  const handleLoadTemplate = (resources: { type: ResourceType; data: K8sResource }[]) => {
+    // 1. Add all resources to savedConfigs
+    const newConfigs: SavedConfig[] = resources.map(res => ({
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      name: res.data.metadata.name,
+      type: res.type,
+      data: res.data,
+      timestamp: Date.now()
+    }));
+
+    setSavedConfigs(prev => [...newConfigs, ...prev]);
+
+    // 2. Load the first resource into the form
+    if (resources.length > 0) {
+      const first = resources[0];
+      navigate(`/${first.type}`, {
+        state: {
+          loadFromConfig: true,
+          data: first.data,
+          // We don't link it to the saved config ID immediately to avoid overwriting the template saved copy unless user explicitly saves over it
+          // OR we can link it. Let's not link it for safety, treat it as a fresh load.
+          // actually user probably wants to edit THAT config.
+          id: newConfigs[0].id,
+          name: newConfigs[0].name
+        }
+      });
+    }
+
+    addToast(t.common.imported || 'Template loaded successfully', 'success');
+  };
+
   const NavItem = ({ type, label, icon: Icon }: { type: ResourceType; label: string; icon: any }) => (
     <NavLink
       to={`/${type}`}
@@ -502,6 +538,14 @@ const AppContent = () => {
             </button>
 
             <button
+              onClick={() => setIsTemplateModalOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
+            >
+              <LayoutGrid size={16} />
+              Templates
+            </button>
+
+            <button
               onClick={handleCopy}
               className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
             >
@@ -629,6 +673,13 @@ const AppContent = () => {
         savedConfigs={savedConfigs}
         currentConfig={formData}
         currentType={resourceType}
+      />
+
+      {/* Template Modal */}
+      <TemplateModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSelectTemplate={handleLoadTemplate}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
+
 import { injectSpeedInsights } from '@vercel/speed-insights';
 import './index.css';
 import App from './App';
@@ -17,10 +17,8 @@ injectSpeedInsights();
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </HelmetProvider>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
