@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation, Link, NavLink } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { toYaml, downloadYaml, parseYaml } from './services/yamlUtils';
 import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob, defaultJob, defaultDaemonSet, defaultStatefulSet, defaultHPA } from './services/templates';
 import { ResourceType, K8sResource } from './types';
@@ -23,6 +25,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { TopologyView } from './components/topology';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AppContextProvider, useTheme, useToast } from './contexts/AppContext';
+import { Analytics } from '@vercel/analytics/react';
 import {
   Box,
   Layers,
@@ -60,12 +63,81 @@ interface SavedConfig {
 
 const STORAGE_KEY = 'k8s_generator_saved_configs';
 
+const VALID_TYPES: ResourceType[] = [
+  'deployment', 'service', 'configmap', 'ingress', 'pvc', 'secret',
+  'cronjob', 'job', 'daemonset', 'statefulset', 'hpa'
+];
+
+// Helper to get default data by type
+const getDefaultData = (type: ResourceType): K8sResource => {
+  switch (type) {
+    case 'deployment': return JSON.parse(JSON.stringify(defaultDeployment));
+    case 'service': return JSON.parse(JSON.stringify(defaultService));
+    case 'configmap': return JSON.parse(JSON.stringify(defaultConfigMap));
+    case 'ingress': return JSON.parse(JSON.stringify(defaultIngress));
+    case 'pvc': return JSON.parse(JSON.stringify(defaultPVC));
+    case 'secret': return JSON.parse(JSON.stringify(defaultSecret));
+    case 'cronjob': return JSON.parse(JSON.stringify(defaultCronJob));
+    case 'job': return JSON.parse(JSON.stringify(defaultJob));
+    case 'daemonset': return JSON.parse(JSON.stringify(defaultDaemonSet));
+    case 'statefulset': return JSON.parse(JSON.stringify(defaultStatefulSet));
+    case 'hpa': return JSON.parse(JSON.stringify(defaultHPA));
+    default: return JSON.parse(JSON.stringify(defaultDeployment));
+  }
+};
+
+const SeoHead = ({ type }: { type: ResourceType }) => {
+  const titles: Record<ResourceType, string> = {
+    deployment: 'Kubernetes Deployment YAML Generator',
+    service: 'Kubernetes Service YAML Generator',
+    configmap: 'Kubernetes ConfigMap Generator',
+    ingress: 'Kubernetes Ingress YAML Builder',
+    pvc: 'PersistentVolumeClaim (PVC) Generator',
+    secret: 'Kubernetes Secret YAML Generator',
+    cronjob: 'Kubernetes CronJob Scheduler Generator',
+    job: 'Kubernetes Job YAML Generator',
+    daemonset: 'Kubernetes DaemonSet Visual Builder',
+    statefulset: 'Kubernetes StatefulSet Generator',
+    hpa: 'HorizontalPodAutoscaler (HPA) Generator'
+  };
+
+  const descriptions: Record<ResourceType, string> = {
+    deployment: 'Create Kubernetes Deployment manifests instantly. Configure replicas, containers, probes, and labels visually.',
+    service: 'Generate K8s Service YAMLs. Support for ClusterIP, NodePort, LoadBalancer, and Headless services.',
+    configmap: 'Easily build ConfigMaps for your applications. Add key-value pairs and generate valid YAML.',
+    ingress: 'Visual Ingress builder. Configure paths, backends, and TLS settings for Nginx or Traefik.',
+    pvc: 'Generate PersistentVolumeClaim manifests. Specify storage classes, access modes, and size.',
+    secret: 'Securely generate Kubernetes Secrets (Opaque, Docker Registry) without base64 manual encoding.',
+    cronjob: 'Schedule tasks with K8s CronJob generator. Set cron schedules and job templates easily.',
+    job: 'Create one-off Kubernetes Jobs. Configure backoff limits, parallelism, and completions.',
+    daemonset: 'Build DaemonSet manifests to run pods on every node. Perfect for logging and monitoring agents.',
+    statefulset: 'Generate StatefulSet YAMLs for stateful applications. Configure volume claim templates.',
+    hpa: 'Configure HorizontalPodAutoscaler to automatically scale your pods based on CPU/Memory usage.'
+  };
+
+  return (
+    <Helmet>
+      <title>{titles[type] || 'K8s YAML Generator'}</title>
+      <meta name="description" content={descriptions[type] || 'Free online tool to generate Kubernetes YAML manifests instantly.'} />
+      <link rel="canonical" href={`https://k8sgen.sivd.dev/${type}`} />
+    </Helmet>
+  );
+};
+
 const AppContent = () => {
   const { t, language, setLanguage } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
   const { addToast } = useToast();
-  const [resourceType, setResourceType] = useState<ResourceType>('deployment');
-  const [formData, setFormData] = useState<K8sResource>(defaultDeployment);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { type } = useParams<{ type: string }>();
+
+  // Validate type from URL or default to deployment
+  const resourceType = (VALID_TYPES.includes(type as ResourceType) ? type : 'deployment') as ResourceType;
+
+  // Form State
+  const [formData, setFormData] = useState<K8sResource>(() => getDefaultData(resourceType));
   const [yamlOutput, setYamlOutput] = useState('');
   const [copied, setCopied] = useState(false);
   const [savedConfigs, setSavedConfigs] = useState<SavedConfig[]>([]);
@@ -95,19 +167,36 @@ const AppContent = () => {
     setIsConfigsLoaded(true);
   }, []);
 
-  // Sync saved configs to localStorage (only after initial load)
+  // Sync saved configs to localStorage
   useEffect(() => {
     if (isConfigsLoaded) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedConfigs));
     }
   }, [savedConfigs, isConfigsLoaded]);
 
+  // Handle Route Changes & Data Loading
+  useEffect(() => {
+    if (location.state && location.state.loadFromConfig && location.state.data) {
+      // Logic for loading a saved config
+      setFormData(location.state.data);
+      if (location.state.name) setConfigName(location.state.name);
+      if (location.state.id) setEditingConfigId(location.state.id);
+      // Clear state to prevent persistence on refresh if desired? 
+      // Actually keeping it is fine for reload
+    } else {
+      // Normal navigation - reset to defaults
+      setFormData(getDefaultData(resourceType));
+      setConfigName('');
+      setEditingConfigId(null);
+    }
+  }, [resourceType, location.state]);
+
   // Update YAML when form data changes
   useEffect(() => {
     setYamlOutput(toYaml(formData));
   }, [formData]);
 
-  // Handle window resize for responsive layout
+  // Handle window resize
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
     window.addEventListener('resize', handleResize);
@@ -153,25 +242,6 @@ const AppContent = () => {
     };
   }, [isDragging, resize, stopResizing]);
 
-  const handleTypeChange = (type: ResourceType) => {
-    setResourceType(type);
-    setEditingConfigId(null);
-    setConfigName('');
-    switch (type) {
-      case 'deployment': setFormData(defaultDeployment); break;
-      case 'service': setFormData(defaultService); break;
-      case 'configmap': setFormData(defaultConfigMap); break;
-      case 'ingress': setFormData(defaultIngress); break;
-      case 'pvc': setFormData(defaultPVC); break;
-      case 'secret': setFormData(defaultSecret); break;
-      case 'cronjob': setFormData(defaultCronJob); break;
-      case 'job': setFormData(defaultJob); break;
-      case 'daemonset': setFormData(defaultDaemonSet); break;
-      case 'statefulset': setFormData(defaultStatefulSet); break;
-      case 'hpa': setFormData(defaultHPA); break;
-    }
-  };
-
   const handleCopy = () => {
     navigator.clipboard.writeText(yamlOutput);
     setCopied(true);
@@ -186,7 +256,6 @@ const AppContent = () => {
     if (!configName.trim()) return;
 
     if (editingConfigId) {
-      // Update existing config
       setSavedConfigs(savedConfigs.map(c =>
         c.id === editingConfigId
           ? {
@@ -200,7 +269,6 @@ const AppContent = () => {
       ));
       addToast(t.common.updated || 'Configuration updated', 'success');
     } else {
-      // Create new config
       const newConfig: SavedConfig = {
         id: Date.now().toString(),
         name: configName.trim(),
@@ -218,10 +286,15 @@ const AppContent = () => {
   };
 
   const loadConfig = (config: SavedConfig) => {
-    setResourceType(config.type);
-    setFormData(config.data);
-    setEditingConfigId(config.id);
-    setConfigName(config.name);
+    // Navigate to the correct route with state
+    navigate(`/${config.type}`, {
+      state: {
+        loadFromConfig: true,
+        data: config.data,
+        id: config.id,
+        name: config.name
+      }
+    });
   };
 
   const handleImport = (yamlContent: string) => {
@@ -249,8 +322,15 @@ const AppContent = () => {
       throw new Error(`Unsupported resource kind: ${parsed.kind}`);
     }
 
-    setResourceType(type);
-    setFormData(parsed);
+    // Must navigate to the new type's route, carrying the imported data
+    navigate(`/${type}`, {
+      state: {
+        loadFromConfig: true,
+        data: parsed,
+        id: null,
+        name: ''
+      }
+    });
   };
 
   const deleteConfig = (id: string, e: React.MouseEvent) => {
@@ -259,20 +339,24 @@ const AppContent = () => {
   };
 
   const NavItem = ({ type, label, icon: Icon }: { type: ResourceType; label: string; icon: any }) => (
-    <button
-      onClick={() => handleTypeChange(type)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${resourceType === type
-        ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100'
-        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-        }`}
+    <NavLink
+      to={`/${type}`}
+      className={({ isActive }) => `
+        w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+        ${isActive
+          ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100'
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+        }
+      `}
     >
       <Icon size={18} />
       {label}
-    </button>
+    </NavLink>
   );
 
   return (
     <div className={`min-h-screen flex flex-col md:flex-row font-sans ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
+      <SeoHead type={resourceType} />
 
       {/* Sidebar */}
       <aside className={`w-full md:w-64 border-r flex-shrink-0 flex flex-col h-screen sticky top-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -336,7 +420,7 @@ const AppContent = () => {
 
         <div className="p-4 border-t border-slate-200 bg-slate-50">
           <div className="text-xs text-slate-400 italic">
-            Visual YAML Builder v1.2
+            Visual YAML Builder v1.3
           </div>
         </div>
       </aside>
@@ -346,9 +430,17 @@ const AppContent = () => {
         {/* Header */}
         <header className={`border-b p-4 flex justify-between items-center shadow-sm z-10 flex-shrink-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className="flex items-center gap-4">
-            <h1 className={`text-xl font-semibold capitalize ${isDark ? 'text-white' : 'text-slate-800'}`}>
-              {viewMode === 'form' ? `${t.nav[resourceType]} ${t.header.config}` : (language === 'zh' ? '资源拓扑' : 'Resource Topology')}
-            </h1>
+            <div className="flex flex-col">
+              <h1 className={`text-xl font-semibold capitalize ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                {viewMode === 'form' ? `${t.nav[resourceType]} ${t.header.config}` : (language === 'zh' ? '资源拓扑' : 'Resource Topology')}
+              </h1>
+              {viewMode === 'form' && (
+                <span className="text-xs text-slate-500 hidden md:block">
+                  https://k8sgen.sivd.dev/{resourceType}
+                </span>
+              )}
+            </div>
+
             {/* View Mode Toggle */}
             <div className={`flex rounded-lg border overflow-hidden ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
               <button
@@ -477,8 +569,7 @@ const AppContent = () => {
             <TopologyView
               resources={savedConfigs.map(c => c.data)}
               onNodeClick={(resource, type) => {
-                setResourceType(type);
-                setFormData(resource);
+                navigate(`/${type}`, { state: { loadFromConfig: true, data: resource } });
                 setViewMode('form');
               }}
             />
@@ -543,12 +634,13 @@ const AppContent = () => {
   );
 };
 
-import { Analytics } from '@vercel/analytics/react';
-
 const App = () => (
   <AppContextProvider>
     <LanguageProvider>
-      <AppContent />
+      <Routes>
+        <Route path="/" element={<Navigate to="/deployment" replace />} />
+        <Route path="/:type" element={<AppContent />} />
+      </Routes>
       <ToastContainer />
       <Analytics />
     </LanguageProvider>
