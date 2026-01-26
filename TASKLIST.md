@@ -73,12 +73,12 @@
 
 ## 📋 模板与预设 (P2)
 
-- [ ] 内置常见应用模板库
-  - [ ] Nginx 反向代理
-  - [ ] Redis 单机版
-  - [ ] MySQL / PostgreSQL
-  - [ ] Node.js 应用
-  - [ ] Spring Boot 应用
+- [x] 内置常见应用模板库
+  - [x] Nginx 反向代理
+  - [x] Redis 单机版
+  - [x] MySQL / PostgreSQL
+  - [x] Node.js 应用
+  - [x] Spring Boot 应用
 - [ ] 支持用户自定义模板
 - [ ] 模板导入/导出
 
