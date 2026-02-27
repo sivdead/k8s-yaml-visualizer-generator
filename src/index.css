@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer utilities {
@@ -21,8 +22,14 @@
 }
 
 @layer base {
+    :root {
+        --font-sans: Inter, sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+    }
+
     body {
         background-color: #f8fafc;
+        font-family: var(--font-sans);
     }
 
     .dark body,

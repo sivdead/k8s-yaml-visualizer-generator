@@ -20,6 +20,7 @@
   <meta property="og:description"
     content="Generate Kubernetes YAML manifests instantly. Visual builder for Deployments, Services, and more." />
   <meta property="og:image" content="https://k8sgen.sivd.dev/og-image.png" />
+  <meta property="og:image:alt" content="K8s YAML Generator preview image" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
@@ -28,6 +29,7 @@
   <meta property="twitter:description"
     content="Generate Kubernetes YAML manifests instantly. Visual builder for Deployments, Services, and more." />
   <meta property="twitter:image" content="https://k8sgen.sivd.dev/og-image.png" />
+  <meta property="twitter:image:alt" content="K8s YAML Generator preview image" />
 
   <!-- GEO: JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -38,7 +40,7 @@
       "headline": "Kubernetes YAML Manifest Generator",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Any",
-      "offer": {
+      "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD"
@@ -56,6 +58,17 @@
         "name": "K8s Link"
       }
     }
+  </script>
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('k8s_gen_theme');
+        var isDark = savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', isDark);
+      } catch (error) {
+        console.error('Theme bootstrap failed', error);
+      }
+    })();
   </script>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"

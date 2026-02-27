@@ -1,32 +1,12 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { TemplateModal } from './components/modals/TemplateModal';
-
-
-import { Routes, Route, Navigate, useNavigate, useParams, useLocation, Link, NavLink } from 'react-router-dom';
-
-
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation, NavLink } from 'react-router-dom';
 import { toYaml, downloadYaml, parseYaml } from './services/yamlUtils';
 import { defaultDeployment, defaultService, defaultConfigMap, defaultIngress, defaultPVC, defaultSecret, defaultCronJob, defaultJob, defaultDaemonSet, defaultStatefulSet, defaultHPA } from './services/templates';
 import { ResourceType, K8sResource } from './types';
 import { isDeployment, isService, isConfigMap, isIngress, isPVC, isSecret, isCronJob, isJob, isDaemonSet, isStatefulSet, isHPA } from './utils/typeGuards';
-import { DeploymentForm } from './components/forms/DeploymentForm';
-import { ServiceForm } from './components/forms/ServiceForm';
-import { ConfigMapForm } from './components/forms/ConfigMapForm';
-import { IngressForm } from './components/forms/IngressForm';
-import { PVCForm } from './components/forms/PVCForm';
-import { SecretForm } from './components/forms/SecretForm';
-import { CronJobForm } from './components/forms/CronJobForm';
-import { JobForm } from './components/forms/JobForm';
-import { DaemonSetForm } from './components/forms/DaemonSetForm';
-import { StatefulSetForm } from './components/forms/StatefulSetForm';
-import { HPAForm } from './components/forms/HPAForm';
-import { ImportModal } from './components/modals/ImportModal';
-import { ExportModal } from './components/modals/ExportModal';
-import { YamlPreview } from './components/YamlPreview';
-import { ValidationPanel } from './components/ValidationPanel';
+import { trackEvent } from './utils/analytics';
 import { ToastContainer } from './components/ToastContainer';
-import { TopologyView } from './components/topology';
+import { SeoContent } from './components/SeoContent';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AppContextProvider, useTheme, useToast } from './contexts/AppContext';
 import { Analytics } from '@vercel/analytics/react';
@@ -56,6 +36,24 @@ import {
   Network,
   LayoutGrid
 } from 'lucide-react';
+
+const DeploymentForm = lazy(() => import('./components/forms/DeploymentForm').then(module => ({ default: module.DeploymentForm })));
+const ServiceForm = lazy(() => import('./components/forms/ServiceForm').then(module => ({ default: module.ServiceForm })));
+const ConfigMapForm = lazy(() => import('./components/forms/ConfigMapForm').then(module => ({ default: module.ConfigMapForm })));
+const IngressForm = lazy(() => import('./components/forms/IngressForm').then(module => ({ default: module.IngressForm })));
+const PVCForm = lazy(() => import('./components/forms/PVCForm').then(module => ({ default: module.PVCForm })));
+const SecretForm = lazy(() => import('./components/forms/SecretForm').then(module => ({ default: module.SecretForm })));
+const CronJobForm = lazy(() => import('./components/forms/CronJobForm').then(module => ({ default: module.CronJobForm })));
+const JobForm = lazy(() => import('./components/forms/JobForm').then(module => ({ default: module.JobForm })));
+const DaemonSetForm = lazy(() => import('./components/forms/DaemonSetForm').then(module => ({ default: module.DaemonSetForm })));
+const StatefulSetForm = lazy(() => import('./components/forms/StatefulSetForm').then(module => ({ default: module.StatefulSetForm })));
+const HPAForm = lazy(() => import('./components/forms/HPAForm').then(module => ({ default: module.HPAForm })));
+const ImportModal = lazy(() => import('./components/modals/ImportModal').then(module => ({ default: module.ImportModal })));
+const ExportModal = lazy(() => import('./components/modals/ExportModal').then(module => ({ default: module.ExportModal })));
+const TemplateModal = lazy(() => import('./components/modals/TemplateModal').then(module => ({ default: module.TemplateModal })));
+const YamlPreview = lazy(() => import('./components/YamlPreview').then(module => ({ default: module.YamlPreview })));
+const ValidationPanel = lazy(() => import('./components/ValidationPanel').then(module => ({ default: module.ValidationPanel })));
+const TopologyView = lazy(() => import('./components/topology').then(module => ({ default: module.TopologyView })));
 
 interface SavedConfig {
   id: string;
@@ -90,42 +88,299 @@ const getDefaultData = (type: ResourceType): K8sResource => {
   }
 };
 
+const SEO_BASE_URL = 'https://k8sgen.sivd.dev';
+
+const SEO_META: Record<ResourceType, { title: string; description: string; keywords: string }> = {
+  deployment: {
+    title: 'Kubernetes Deployment YAML Generator',
+    description: 'Create Kubernetes Deployment manifests instantly. Configure replicas, containers, probes, and labels visually.',
+    keywords: 'kubernetes deployment yaml, k8s deployment example, deployment manifest generator'
+  },
+  service: {
+    title: 'Kubernetes Service YAML Generator',
+    description: 'Generate Kubernetes Service YAML with ClusterIP, NodePort, and LoadBalancer options.',
+    keywords: 'kubernetes service yaml, k8s service manifest, clusterip nodeport loadbalancer'
+  },
+  configmap: {
+    title: 'Kubernetes ConfigMap YAML Generator',
+    description: 'Build Kubernetes ConfigMap manifests with key-value pairs for app configuration.',
+    keywords: 'kubernetes configmap yaml, configmap example, k8s config data'
+  },
+  ingress: {
+    title: 'Kubernetes Ingress YAML Builder',
+    description: 'Create Kubernetes Ingress manifests with host rules, paths, backends, and TLS settings.',
+    keywords: 'kubernetes ingress yaml, ingress nginx example, k8s ingress rules'
+  },
+  pvc: {
+    title: 'PersistentVolumeClaim YAML Generator',
+    description: 'Generate PersistentVolumeClaim YAML with storage class, access mode, and capacity settings.',
+    keywords: 'kubernetes pvc yaml, persistent volume claim example, k8s storage manifest'
+  },
+  secret: {
+    title: 'Kubernetes Secret YAML Generator',
+    description: 'Generate Kubernetes Secret YAML safely for Opaque and Docker registry credentials.',
+    keywords: 'kubernetes secret yaml, dockerconfigjson secret, k8s secret manifest'
+  },
+  cronjob: {
+    title: 'Kubernetes CronJob YAML Generator',
+    description: 'Create Kubernetes CronJob YAML for scheduled workloads with retry and template settings.',
+    keywords: 'kubernetes cronjob yaml, cronjob schedule k8s, scheduled job manifest'
+  },
+  job: {
+    title: 'Kubernetes Job YAML Generator',
+    description: 'Create one-off Kubernetes Job manifests with completions, parallelism, and retry limits.',
+    keywords: 'kubernetes job yaml, k8s batch job example, job manifest generator'
+  },
+  daemonset: {
+    title: 'Kubernetes DaemonSet YAML Generator',
+    description: 'Build DaemonSet YAML to run pods on every node for logs, monitoring, and platform agents.',
+    keywords: 'kubernetes daemonset yaml, daemonset example, run pod on every node'
+  },
+  statefulset: {
+    title: 'Kubernetes StatefulSet YAML Generator',
+    description: 'Generate StatefulSet YAML for stateful workloads with stable identities and storage templates.',
+    keywords: 'kubernetes statefulset yaml, statefulset example, volumeclaimtemplates'
+  },
+  hpa: {
+    title: 'HorizontalPodAutoscaler YAML Generator',
+    description: 'Create HPA YAML to autoscale workloads by CPU and memory usage thresholds.',
+    keywords: 'kubernetes hpa yaml, autoscaling manifest, horizontal pod autoscaler example'
+  }
+};
+
+const SEO_FAQ: Record<ResourceType, Array<{ question: string; answer: string }>> = {
+  deployment: [
+    {
+      question: 'What is a Kubernetes Deployment used for?',
+      answer: 'Deployment manages stateless workloads with replica scaling and rolling updates.'
+    },
+    {
+      question: 'How do I generate a Deployment YAML quickly?',
+      answer: 'Use this visual form, configure replicas and containers, then copy or export YAML directly.'
+    }
+  ],
+  service: [
+    {
+      question: 'When should I use a Kubernetes Service?',
+      answer: 'Use Service to expose Pods behind a stable virtual IP and load-balance traffic.'
+    },
+    {
+      question: 'Which Service type should I choose?',
+      answer: 'Use ClusterIP for internal traffic, NodePort for node-level access, and LoadBalancer for public cloud exposure.'
+    }
+  ],
+  configmap: [
+    {
+      question: 'What is ConfigMap in Kubernetes?',
+      answer: 'ConfigMap stores non-sensitive configuration such as environment values and app settings.'
+    },
+    {
+      question: 'How do I mount ConfigMap values into Pods?',
+      answer: 'Reference the ConfigMap using env, envFrom, or volume mounts in workload manifests.'
+    }
+  ],
+  ingress: [
+    {
+      question: 'Why use Kubernetes Ingress?',
+      answer: 'Ingress provides host/path based HTTP routing and TLS termination for Services.'
+    },
+    {
+      question: 'What does ingressClassName do?',
+      answer: 'ingressClassName selects the Ingress controller, such as nginx, to process rules.'
+    }
+  ],
+  pvc: [
+    {
+      question: 'What is a PersistentVolumeClaim?',
+      answer: 'PVC is a storage request that binds to a PersistentVolume for durable data.'
+    },
+    {
+      question: 'How do I set PVC size and mode?',
+      answer: 'Configure accessModes and resources.requests.storage according to your storage class capabilities.'
+    }
+  ],
+  secret: [
+    {
+      question: 'What should be stored in a Kubernetes Secret?',
+      answer: 'Store sensitive values such as passwords, tokens, and registry credentials in Secret.'
+    },
+    {
+      question: 'Should I use data or stringData?',
+      answer: 'Use stringData for easier authoring; Kubernetes converts it to encoded data automatically.'
+    }
+  ],
+  cronjob: [
+    {
+      question: 'When should I use CronJob?',
+      answer: 'Use CronJob for scheduled tasks such as backups, sync jobs, and periodic maintenance.'
+    },
+    {
+      question: 'How do I validate cron syntax for Kubernetes?',
+      answer: 'Set spec.schedule with a valid cron expression and verify it before deployment.'
+    }
+  ],
+  job: [
+    {
+      question: 'What is Kubernetes Job used for?',
+      answer: 'Job runs finite tasks and tracks completion with retries and optional parallelism.'
+    },
+    {
+      question: 'How do I control retry behavior in Job?',
+      answer: 'Use spec.backoffLimit and restartPolicy to define retry and failure behavior.'
+    }
+  ],
+  daemonset: [
+    {
+      question: 'Why use DaemonSet instead of Deployment?',
+      answer: 'DaemonSet runs one Pod on each selected node, ideal for node-level agents.'
+    },
+    {
+      question: 'Can DaemonSet target specific nodes?',
+      answer: 'Yes, use nodeSelector, affinity, and tolerations to control placement.'
+    }
+  ],
+  statefulset: [
+    {
+      question: 'What workloads need StatefulSet?',
+      answer: 'StatefulSet fits databases and systems that require stable identity and persistent storage.'
+    },
+    {
+      question: 'How is StatefulSet different from Deployment?',
+      answer: 'StatefulSet preserves pod identity and ordered rollout, while Deployment focuses on stateless scaling.'
+    }
+  ],
+  hpa: [
+    {
+      question: 'What does HPA do in Kubernetes?',
+      answer: 'HPA automatically scales replicas up or down based on resource metrics.'
+    },
+    {
+      question: 'What should I configure first for HPA?',
+      answer: 'Set scaleTargetRef, minReplicas, maxReplicas, and the target metric threshold.'
+    }
+  ]
+};
+
+const upsertMeta = (selector: string, create: () => HTMLElement, updater: (element: HTMLElement) => void): void => {
+  const existing = document.head.querySelector<HTMLElement>(selector);
+  const element = existing ?? create();
+  updater(element);
+  if (!existing) {
+    document.head.appendChild(element);
+  }
+};
+
 const SeoHead = ({ type }: { type: ResourceType }) => {
-  const titles: Record<ResourceType, string> = {
-    deployment: 'Kubernetes Deployment YAML Generator',
-    service: 'Kubernetes Service YAML Generator',
-    configmap: 'Kubernetes ConfigMap Generator',
-    ingress: 'Kubernetes Ingress YAML Builder',
-    pvc: 'PersistentVolumeClaim (PVC) Generator',
-    secret: 'Kubernetes Secret YAML Generator',
-    cronjob: 'Kubernetes CronJob Scheduler Generator',
-    job: 'Kubernetes Job YAML Generator',
-    daemonset: 'Kubernetes DaemonSet Visual Builder',
-    statefulset: 'Kubernetes StatefulSet Generator',
-    hpa: 'HorizontalPodAutoscaler (HPA) Generator'
-  };
+  useEffect(() => {
+    const meta = SEO_META[type];
+    const routeUrl = `${SEO_BASE_URL}/${type}`;
+    const fullTitle = `${meta.title} | K8s YAML Generator`;
 
-  const descriptions: Record<ResourceType, string> = {
-    deployment: 'Create Kubernetes Deployment manifests instantly. Configure replicas, containers, probes, and labels visually.',
-    service: 'Generate K8s Service YAMLs. Support for ClusterIP, NodePort, LoadBalancer, and Headless services.',
-    configmap: 'Easily build ConfigMaps for your applications. Add key-value pairs and generate valid YAML.',
-    ingress: 'Visual Ingress builder. Configure paths, backends, and TLS settings for Nginx or Traefik.',
-    pvc: 'Generate PersistentVolumeClaim manifests. Specify storage classes, access modes, and size.',
-    secret: 'Securely generate Kubernetes Secrets (Opaque, Docker Registry) without base64 manual encoding.',
-    cronjob: 'Schedule tasks with K8s CronJob generator. Set cron schedules and job templates easily.',
-    job: 'Create one-off Kubernetes Jobs. Configure backoff limits, parallelism, and completions.',
-    daemonset: 'Build DaemonSet manifests to run pods on every node. Perfect for logging and monitoring agents.',
-    statefulset: 'Generate StatefulSet YAMLs for stateful applications. Configure volume claim templates.',
-    hpa: 'Configure HorizontalPodAutoscaler to automatically scale your pods based on CPU/Memory usage.'
-  };
+    document.title = fullTitle;
 
-  return (
-    <>
-      <title>{titles[type] || 'K8s YAML Generator'}</title>
-      <meta name="description" content={descriptions[type] || 'Free online tool to generate Kubernetes YAML manifests instantly.'} />
-      <link rel="canonical" href={`https://k8sgen.sivd.dev/${type}`} />
-    </>
-  );
+    upsertMeta('meta[name="description"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('name', 'description');
+      return tag;
+    }, (tag) => tag.setAttribute('content', meta.description));
+
+    upsertMeta('meta[name="keywords"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('name', 'keywords');
+      return tag;
+    }, (tag) => tag.setAttribute('content', meta.keywords));
+
+    upsertMeta('link[rel="canonical"]', () => {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      return link;
+    }, (link) => link.setAttribute('href', routeUrl));
+
+    upsertMeta('meta[property="og:url"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('property', 'og:url');
+      return tag;
+    }, (tag) => tag.setAttribute('content', routeUrl));
+
+    upsertMeta('meta[property="og:title"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('property', 'og:title');
+      return tag;
+    }, (tag) => tag.setAttribute('content', fullTitle));
+
+    upsertMeta('meta[property="og:description"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('property', 'og:description');
+      return tag;
+    }, (tag) => tag.setAttribute('content', meta.description));
+
+    upsertMeta('meta[property="twitter:url"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('property', 'twitter:url');
+      return tag;
+    }, (tag) => tag.setAttribute('content', routeUrl));
+
+    upsertMeta('meta[property="twitter:title"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('property', 'twitter:title');
+      return tag;
+    }, (tag) => tag.setAttribute('content', fullTitle));
+
+    upsertMeta('meta[property="twitter:description"]', () => {
+      const tag = document.createElement('meta');
+      tag.setAttribute('property', 'twitter:description');
+      return tag;
+    }, (tag) => tag.setAttribute('content', meta.description));
+
+    const jsonLdPayload = {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'K8s YAML Generator',
+      headline: meta.title,
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Any',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD'
+      },
+      description: meta.description,
+      url: routeUrl
+    };
+
+    upsertMeta('script#route-jsonld', () => {
+      const script = document.createElement('script');
+      script.id = 'route-jsonld';
+      script.type = 'application/ld+json';
+      return script;
+    }, (script) => {
+      script.textContent = JSON.stringify(jsonLdPayload);
+    });
+
+    const faqJsonLdPayload = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: SEO_FAQ[type].map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer
+        }
+      }))
+    };
+
+    upsertMeta('script#route-faq-jsonld', () => {
+      const script = document.createElement('script');
+      script.id = 'route-faq-jsonld';
+      script.type = 'application/ld+json';
+      return script;
+    }, (script) => {
+      script.textContent = JSON.stringify(faqJsonLdPayload);
+    });
+  }, [type]);
+
+  return null;
 };
 
 const AppContent = () => {
@@ -196,6 +451,13 @@ const AppContent = () => {
     }
   }, [resourceType, location.state]);
 
+  useEffect(() => {
+    trackEvent('resource_page_view', {
+      resource_type: resourceType,
+      path: location.pathname
+    });
+  }, [resourceType, location.pathname]);
+
   // Update YAML when form data changes
   useEffect(() => {
     setYamlOutput(toYaml(formData));
@@ -250,11 +512,19 @@ const AppContent = () => {
   const handleCopy = () => {
     navigator.clipboard.writeText(yamlOutput);
     setCopied(true);
+    trackEvent('yaml_copy_click', {
+      resource_type: resourceType,
+      yaml_length: yamlOutput.length
+    });
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
     downloadYaml(`${formData.metadata.name}-${resourceType}.yaml`, yamlOutput);
+    trackEvent('yaml_download_click', {
+      resource_type: resourceType,
+      resource_name: formData.metadata.name
+    });
   };
 
   const handleSaveConfig = () => {
@@ -273,6 +543,7 @@ const AppContent = () => {
           : c
       ));
       addToast(t.common.updated || 'Configuration updated', 'success');
+      trackEvent('config_update', { resource_type: resourceType });
     } else {
       const newConfig: SavedConfig = {
         id: Date.now().toString(),
@@ -283,6 +554,7 @@ const AppContent = () => {
       };
       setSavedConfigs([newConfig, ...savedConfigs]);
       addToast(t.common.saved || 'Configuration saved', 'success');
+      trackEvent('config_save', { resource_type: resourceType });
     }
 
     setIsSaveModalOpen(false);
@@ -292,6 +564,10 @@ const AppContent = () => {
 
   const loadConfig = (config: SavedConfig) => {
     // Navigate to the correct route with state
+    trackEvent('saved_config_open', {
+      resource_type: config.type,
+      config_name: config.name
+    });
     navigate(`/${config.type}`, {
       state: {
         loadFromConfig: true,
@@ -336,6 +612,7 @@ const AppContent = () => {
         name: ''
       }
     });
+    trackEvent('yaml_import', { resource_type: type });
   };
 
   const deleteConfig = (id: string, e: React.MouseEvent) => {
@@ -372,11 +649,16 @@ const AppContent = () => {
     }
 
     addToast(t.common.imported || 'Template loaded successfully', 'success');
+    trackEvent('template_load', {
+      resource_count: resources.length,
+      first_resource_type: resources[0]?.type ?? 'unknown'
+    });
   };
 
   const NavItem = ({ type, label, icon: Icon }: { type: ResourceType; label: string; icon: any }) => (
     <NavLink
       to={`/${type}`}
+      onClick={() => trackEvent('resource_nav_click', { from_resource: resourceType, to_resource: type })}
       className={({ isActive }) => `
         w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
         ${isActive
@@ -388,6 +670,12 @@ const AppContent = () => {
       <Icon size={18} />
       {label}
     </NavLink>
+  );
+
+  const formLoadingFallback = (
+    <div className={`rounded-lg border p-4 text-sm ${isDark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-500'}`}>
+      Loading editor...
+    </div>
   );
 
   return (
@@ -569,17 +857,22 @@ const AppContent = () => {
               {/* Form Area */}
               <div className={`flex-1 overflow-y-auto p-6 min-w-[320px] custom-scrollbar ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
                 <div className={`max-w-3xl mx-auto rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                  {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
-                  {isService(formData) && <ServiceForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
-                  {isConfigMap(formData) && <ConfigMapForm data={formData} onChange={setFormData} />}
-                  {isIngress(formData) && <IngressForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
-                  {isPVC(formData) && <PVCForm data={formData} onChange={setFormData} />}
-                  {isSecret(formData) && <SecretForm data={formData} onChange={setFormData} />}
-                  {isCronJob(formData) && <CronJobForm data={formData} onChange={setFormData} />}
-                  {isJob(formData) && <JobForm data={formData} onChange={setFormData} />}
-                  {isDaemonSet(formData) && <DaemonSetForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
-                  {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
-                  {isHPA(formData) && <HPAForm data={formData} onChange={setFormData} />}
+                  <Suspense fallback={formLoadingFallback}>
+                    {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                    {isService(formData) && <ServiceForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                    {isConfigMap(formData) && <ConfigMapForm data={formData} onChange={setFormData} />}
+                    {isIngress(formData) && <IngressForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                    {isPVC(formData) && <PVCForm data={formData} onChange={setFormData} />}
+                    {isSecret(formData) && <SecretForm data={formData} onChange={setFormData} />}
+                    {isCronJob(formData) && <CronJobForm data={formData} onChange={setFormData} />}
+                    {isJob(formData) && <JobForm data={formData} onChange={setFormData} />}
+                    {isDaemonSet(formData) && <DaemonSetForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                    {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
+                    {isHPA(formData) && <HPAForm data={formData} onChange={setFormData} />}
+                  </Suspense>
+                </div>
+                <div className={`max-w-3xl mx-auto mt-6 rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                  <SeoContent type={resourceType} />
                 </div>
               </div>
 
@@ -597,26 +890,32 @@ const AppContent = () => {
               >
                 {/* Validation Panel */}
                 <div className="flex-shrink-0 p-3 border-b border-slate-200 dark:border-slate-700">
-                  <ValidationPanel resource={formData} showDetails={true} />
+                  <Suspense fallback={<div className="text-sm text-slate-500">Loading validation...</div>}>
+                    <ValidationPanel resource={formData} showDetails={true} />
+                  </Suspense>
                 </div>
                 {/* YAML Preview */}
                 <div className="flex-1 overflow-hidden">
-                  <YamlPreview
-                    code={yamlOutput}
-                    filename={`${formData.metadata.name}.yaml`}
-                  />
+                  <Suspense fallback={<div className="p-3 text-sm text-slate-500">Loading YAML preview...</div>}>
+                    <YamlPreview
+                      code={yamlOutput}
+                      filename={`${formData.metadata.name}.yaml`}
+                    />
+                  </Suspense>
                 </div>
               </div>
             </>
           ) : (
             /* Topology View */
-            <TopologyView
-              resources={savedConfigs.map(c => c.data)}
-              onNodeClick={(resource, type) => {
-                navigate(`/${type}`, { state: { loadFromConfig: true, data: resource } });
-                setViewMode('form');
-              }}
-            />
+            <Suspense fallback={<div className="p-6 text-sm text-slate-500">Loading topology view...</div>}>
+              <TopologyView
+                resources={savedConfigs.map(c => c.data)}
+                onNodeClick={(resource, type) => {
+                  navigate(`/${type}`, { state: { loadFromConfig: true, data: resource } });
+                  setViewMode('form');
+                }}
+              />
+            </Suspense>
           )}
         </div>
       </main>
@@ -660,27 +959,39 @@ const AppContent = () => {
       )}
 
       {/* Import Modal */}
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onImport={handleImport}
-      />
+      {isImportModalOpen && (
+        <Suspense fallback={null}>
+          <ImportModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImport={handleImport}
+          />
+        </Suspense>
+      )}
 
       {/* Export Modal */}
-      <ExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        savedConfigs={savedConfigs}
-        currentConfig={formData}
-        currentType={resourceType}
-      />
+      {isExportModalOpen && (
+        <Suspense fallback={null}>
+          <ExportModal
+            isOpen={isExportModalOpen}
+            onClose={() => setIsExportModalOpen(false)}
+            savedConfigs={savedConfigs}
+            currentConfig={formData}
+            currentType={resourceType}
+          />
+        </Suspense>
+      )}
 
       {/* Template Modal */}
-      <TemplateModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        onSelectTemplate={handleLoadTemplate}
-      />
+      {isTemplateModalOpen && (
+        <Suspense fallback={null}>
+          <TemplateModal
+            isOpen={isTemplateModalOpen}
+            onClose={() => setIsTemplateModalOpen(false)}
+            onSelectTemplate={handleLoadTemplate}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

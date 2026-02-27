@@ -1,6 +1,14 @@
 {
     "rewrites": [
         {
+            "source": "/googled5b3640beaba2100.html",
+            "destination": "/googled5b3640beaba2100.html"
+        },
+        {
+            "source": "/:page(deployment|service|configmap|ingress|pvc|secret|cronjob|job|daemonset|statefulset|hpa)",
+            "destination": "/:page.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

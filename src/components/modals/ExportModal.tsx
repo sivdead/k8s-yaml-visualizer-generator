@@ -88,6 +88,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             pvc: 'PVC',
             secret: 'SEC',
             cronjob: 'CJ',
+            job: 'JOB',
+            daemonset: 'DS',
+            statefulset: 'STS',
+            hpa: 'HPA',
         };
         return labels[type];
     };
