@@ -227,6 +227,126 @@ const buildFaqJsonLd = (route) => {
   return JSON.stringify(payload);
 };
 
+const HOMEPAGE = {
+  title: 'Free Kubernetes YAML Generator Online - K8s Deployment & Service Manifest Builder',
+  description: 'Free online Kubernetes YAML generator. Build deployment, service, ingress, configmap, secret, job, and cronjob manifests visually with real-time preview and validation.',
+  faq: [
+    {
+      question: 'What is a Kubernetes YAML generator?',
+      answer: 'A Kubernetes YAML generator is a tool that helps you create valid Kubernetes manifest files through a visual interface instead of writing YAML by hand. It reduces syntax errors and speeds up the configuration process for deployments, services, and other K8s resources.'
+    },
+    {
+      question: 'Is this Kubernetes YAML generator free?',
+      answer: 'Yes, this tool is completely free and runs entirely in your browser. No sign-up, no server-side processing, and no data leaves your machine.'
+    },
+    {
+      question: 'What Kubernetes resources can I generate?',
+      answer: 'You can generate YAML for Deployments, Services, Ingress, ConfigMaps, Secrets, PersistentVolumeClaims, Jobs, CronJobs, DaemonSets, StatefulSets, and HorizontalPodAutoscalers.'
+    }
+  ]
+};
+
+const RESOURCE_DESCRIPTIONS = {
+  deployment: 'Create Deployment manifests for stateless apps with rolling updates, replicas, and probes.',
+  service: 'Generate ClusterIP, NodePort, and LoadBalancer Service manifests for exposing Pods.',
+  configmap: 'Build ConfigMap manifests for non-sensitive environment and file-based configuration.',
+  ingress: 'Create Ingress rules with host/path routing and TLS for HTTP/HTTPS traffic.',
+  pvc: 'Generate PersistentVolumeClaim manifests with storage class and access mode settings.',
+  secret: 'Build Secret manifests for credentials, tokens, and other sensitive values.',
+  cronjob: 'Create scheduled CronJob manifests with cron syntax and job template options.',
+  job: 'Generate one-off batch Job manifests with retries and parallelism controls.',
+  daemonset: 'Build DaemonSet manifests to run one Pod per node for logging, monitoring, etc.',
+  statefulset: 'Create StatefulSet manifests with stable identity and persistent storage templates.',
+  hpa: 'Generate HPA manifests to autoscale workloads based on CPU/memory metrics.'
+};
+
+const buildHomepageFallback = () => {
+  const resourceLinks = ROUTES.map(route =>
+    `<li><a href="/${route.type}" style="color:#2563eb;text-decoration:underline;">${escapeHtml(route.title)}</a> &mdash; ${escapeHtml(RESOURCE_DESCRIPTIONS[route.type])}</li>`
+  ).join('\n      ');
+
+  return `
+  <main id="seo-fallback" style="max-width:960px;margin:0 auto;padding:24px 16px;font-family:Inter,Arial,sans-serif;line-height:1.6;color:#0f172a;">
+    <h1 style="font-size:30px;margin:0 0 12px;">Kubernetes YAML Generator &mdash; Free Online K8s Manifest Builder</h1>
+    <p style="font-size:18px;margin:0 0 16px;">Build production-ready Kubernetes YAML manifests visually. Free, online, no sign-up required.</p>
+    <p style="margin:0 0 16px;">Stop writing Kubernetes YAML from scratch. This visual generator lets you configure Deployments, Services, Ingress, ConfigMaps, Secrets, and more through an intuitive form interface with real-time YAML preview. Every manifest is validated against Kubernetes best practices before you copy or export.</p>
+
+    <h2 style="font-size:20px;margin:20px 0 8px;">Features</h2>
+    <ul style="margin:0 0 16px 20px;">
+      <li>Visual form builder for 11 Kubernetes resource types</li>
+      <li>Real-time YAML preview with syntax highlighting</li>
+      <li>Built-in validation against Kubernetes best practices</li>
+      <li>Import existing YAML to edit visually</li>
+      <li>Export to file or copy to clipboard</li>
+      <li>Topology view to visualize resource relationships</li>
+      <li>Works entirely in the browser &mdash; no server, no sign-up</li>
+    </ul>
+
+    <h2 style="font-size:20px;margin:20px 0 8px;">Supported Kubernetes Resources</h2>
+    <ul style="margin:0 0 16px 20px;">
+      ${resourceLinks}
+    </ul>
+
+    <h2 style="font-size:20px;margin:20px 0 8px;">Quick Example: Deployment YAML</h2>
+    <pre style="margin:0 0 16px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;overflow:auto;"><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  labels:
+    app: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-app
+          image: nginx:1.25
+          ports:
+            - containerPort: 80</code></pre>
+
+    <h2 style="font-size:20px;margin:20px 0 8px;">Frequently Asked Questions</h2>
+    <dl style="margin:0 0 16px;">
+      <dt style="font-weight:600;margin:8px 0 4px;">What is a Kubernetes YAML generator?</dt>
+      <dd style="margin:0 0 8px 0;">A Kubernetes YAML generator helps you create valid K8s manifest files through a visual interface instead of writing YAML by hand, reducing syntax errors and speeding up configuration.</dd>
+      <dt style="font-weight:600;margin:8px 0 4px;">Is this tool free?</dt>
+      <dd style="margin:0 0 8px 0;">Yes, completely free. It runs entirely in your browser with no sign-up and no server-side processing.</dd>
+      <dt style="font-weight:600;margin:8px 0 4px;">What resources can I generate?</dt>
+      <dd style="margin:0 0 8px 0;">Deployments, Services, Ingress, ConfigMaps, Secrets, PVCs, Jobs, CronJobs, DaemonSets, StatefulSets, and HPAs.</dd>
+    </dl>
+
+    <p style="margin:0;color:#475569;font-size:14px;">This static content helps search engines index the homepage before JavaScript executes.</p>
+  </main>`;
+};
+
+const buildHomepageFaqJsonLd = () => {
+  const payload = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: HOMEPAGE.faq.map(item => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer
+      }
+    }))
+  };
+  return JSON.stringify(payload);
+};
+
+const addHreflangTags = (html, url) => {
+  // Remove any existing hreflang tags first to avoid duplicates
+  let result = html.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*" ?\/?>\s*/g, '');
+  const hreflang = `  <link rel="alternate" hreflang="x-default" href="${url}" />\n  <link rel="alternate" hreflang="en" href="${url}" />\n`;
+  return updateTag(result, /<\/head>/i, `${hreflang}</head>`);
+};
+
 const generate = async () => {
   const indexHtml = await fs.readFile(INDEX_FILE, 'utf8');
 
@@ -244,6 +364,7 @@ const generate = async () => {
     html = updateTag(html, /<meta property="twitter:url" content="[^"]*" ?\/?>/i, `<meta property="twitter:url" content="${routeUrl}" />`);
     html = updateTag(html, /<meta property="twitter:title" content="[^"]*" ?\/?>/i, `<meta property="twitter:title" content="${escapeHtml(fullTitle)}" />`);
     html = updateTag(html, /<meta property="twitter:description"[\s\S]*?content="[^"]*"[^>]*>/i, `<meta property="twitter:description" content="${escapeHtml(route.description)}" />`);
+    html = addHreflangTags(html, routeUrl);
     html = updateTag(
       html,
       /<\/head>/i,
@@ -260,7 +381,29 @@ const generate = async () => {
     await fs.writeFile(outFile, html, 'utf8');
   }
 
-  console.log(`Generated ${ROUTES.length} prerendered route HTML files.`);
+  // --- Homepage prerendering (in-place modification of dist/index.html) ---
+  let homepageHtml = indexHtml;
+  homepageHtml = updateTag(homepageHtml, /<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(HOMEPAGE.title)}</title>`);
+  homepageHtml = updateTag(homepageHtml, /<meta name="description"[\s\S]*?content="[^"]*"[^>]*>/i, `<meta name="description" content="${escapeHtml(HOMEPAGE.description)}" />`);
+  homepageHtml = updateTag(homepageHtml, /<meta property="og:title" content="[^"]*" ?\/?>/i, `<meta property="og:title" content="${escapeHtml(HOMEPAGE.title)}" />`);
+  homepageHtml = updateTag(homepageHtml, /<meta property="og:description"[\s\S]*?content="[^"]*"[^>]*>/i, `<meta property="og:description" content="${escapeHtml(HOMEPAGE.description)}" />`);
+  homepageHtml = updateTag(homepageHtml, /<meta property="twitter:title" content="[^"]*" ?\/?>/i, `<meta property="twitter:title" content="${escapeHtml(HOMEPAGE.title)}" />`);
+  homepageHtml = updateTag(homepageHtml, /<meta property="twitter:description"[\s\S]*?content="[^"]*"[^>]*>/i, `<meta property="twitter:description" content="${escapeHtml(HOMEPAGE.description)}" />`);
+  homepageHtml = addHreflangTags(homepageHtml, `${BASE_URL}/`);
+  homepageHtml = updateTag(
+    homepageHtml,
+    /<\/head>/i,
+    `  <script id="homepage-faq-jsonld" type="application/ld+json">${buildHomepageFaqJsonLd()}</script>\n</head>`
+  );
+  homepageHtml = updateTag(homepageHtml, /<body>/i, `<body>${buildHomepageFallback()}`);
+  homepageHtml = updateTag(
+    homepageHtml,
+    /<\/body>/i,
+    `  <script>document.getElementById('seo-fallback')?.remove();</script>\n</body>`
+  );
+  await fs.writeFile(INDEX_FILE, homepageHtml, 'utf8');
+
+  console.log(`Generated ${ROUTES.length} prerendered route HTML files + homepage fallback.`);
 };
 
 generate().catch((error) => {
