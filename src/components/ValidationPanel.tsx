@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle, Shield } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, Shield, Lightbulb, Info } from 'lucide-react';
 import { validateK8sResource, ValidationResult, ValidationError } from '../services/k8sValidator';
 import { K8sResource } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -9,17 +9,12 @@ interface ValidationPanelProps {
     showDetails?: boolean;
 }
 
-/**
- * 获取翻译后的消息
- */
 const getLocalizedMessage = (
     error: ValidationError,
     validationT: Record<string, string>
 ): string => {
-    // 如果有 messageKey，使用翻译
     if (error.messageKey && validationT[error.messageKey]) {
         let message = validationT[error.messageKey];
-        // 替换参数占位符
         if (error.messageParams) {
             Object.entries(error.messageParams).forEach(([key, value]) => {
                 message = message.replace(`{${key}}`, value);
@@ -27,43 +22,60 @@ const getLocalizedMessage = (
         }
         return message;
     }
-    // 否则使用原始消息（如 Zod 验证错误）
     return error.message;
 };
 
-/**
- * K8s 规范校验面板
- */
+const getCategoryLabel = (category?: string, language?: string): string => {
+    if (language === 'zh') {
+        switch (category) {
+            case 'production-tip': return '生产建议';
+            case 'recommendation': return '优化建议';
+            default: return '建议';
+        }
+    }
+    switch (category) {
+        case 'production-tip': return 'Production tip';
+        case 'recommendation': return 'Recommendation';
+        default: return 'Suggestion';
+    }
+};
+
+const getCategoryIcon = (category?: string) => {
+    switch (category) {
+        case 'production-tip': return <Lightbulb size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />;
+        case 'recommendation': return <Info size={14} className="text-sky-500 mt-0.5 flex-shrink-0" />;
+        default: return <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />;
+    }
+};
+
 export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, showDetails = true }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const validationT = (t as any).validation || {};
 
     const validation = useMemo(() => validateK8sResource(resource), [resource]);
 
     const { valid, errors, warnings } = validation;
 
-    // 翻译后的标签
     const titleText = validationT.title || 'K8s Spec Validation';
     const validText = validationT.passed || 'Validation Passed';
     const errorText = validationT.errors || 'error(s)';
-    const warningText = validationT.warnings || 'warning(s)';
+    const tipsText = language === 'zh' ? '条建议' : 'tip(s)';
 
     if (!showDetails) {
-        // 简洁模式：只显示状态图标
         return (
             <div className="flex items-center gap-2">
                 {valid ? (
                     errors.length === 0 && warnings.length === 0 ? (
                         <CheckCircle size={16} className="text-green-500" />
                     ) : (
-                        <AlertTriangle size={16} className="text-amber-500" />
+                        <Lightbulb size={16} className="text-blue-500" />
                     )
                 ) : (
                     <AlertCircle size={16} className="text-red-500" />
                 )}
                 <span className="text-xs text-slate-500">
                     {valid
-                        ? (warnings.length > 0 ? `${warnings.length} ${warningText}` : validText)
+                        ? (warnings.length > 0 ? `${warnings.length} ${tipsText}` : validText)
                         : `${errors.length} ${errorText}`
                     }
                 </span>
@@ -73,16 +85,15 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
 
     return (
         <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-800">
-            {/* 头部 */}
             <div className={`px-3 py-2 flex items-center justify-between ${!valid
                 ? 'bg-red-50 dark:bg-red-900/30 border-b border-red-200 dark:border-red-800'
                 : warnings.length > 0
-                    ? 'bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800'
+                    ? 'bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800'
                     : 'bg-green-50 dark:bg-green-900/30 border-b border-green-200 dark:border-green-800'
                 }`}>
                 <div className="flex items-center gap-2">
                     <Shield size={16} className={
-                        !valid ? 'text-red-500' : warnings.length > 0 ? 'text-amber-500' : 'text-green-500'
+                        !valid ? 'text-red-500' : warnings.length > 0 ? 'text-blue-500' : 'text-green-500'
                     } />
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         {titleText}
@@ -96,9 +107,9 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                         </span>
                     )}
                     {warnings.length > 0 && (
-                        <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                            <AlertTriangle size={12} />
-                            {warnings.length} {warningText}
+                        <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                            <Lightbulb size={12} />
+                            {warnings.length} {tipsText}
                         </span>
                     )}
                     {errors.length === 0 && warnings.length === 0 && (
@@ -110,7 +121,6 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                 </div>
             </div>
 
-            {/* 详情列表 */}
             {(errors.length > 0 || warnings.length > 0) && (
                 <div className="max-h-48 overflow-y-auto">
                     {errors.map((err, idx) => (
@@ -121,9 +131,14 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                             <div className="flex items-start gap-2">
                                 <AlertCircle size={14} className="text-red-500 mt-0.5 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                    <code className="text-xs text-slate-500 dark:text-slate-400 block truncate">
-                                        {err.path}
-                                    </code>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
+                                            Error
+                                        </span>
+                                        <code className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                            {err.path}
+                                        </code>
+                                    </div>
                                     <p className="text-sm text-slate-700 dark:text-slate-300">
                                         {getLocalizedMessage(err, validationT)}
                                     </p>
@@ -137,11 +152,18 @@ export const ValidationPanel: React.FC<ValidationPanelProps> = ({ resource, show
                             className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 last:border-b-0 bg-white dark:bg-slate-800"
                         >
                             <div className="flex items-start gap-2">
-                                <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                                {getCategoryIcon(warn.category)}
                                 <div className="flex-1 min-w-0">
-                                    <code className="text-xs text-slate-500 dark:text-slate-400 block truncate">
-                                        {warn.path}
-                                    </code>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${
+                                            warn.category === 'production-tip' ? 'text-blue-600 dark:text-blue-400' : 'text-sky-600 dark:text-sky-400'
+                                        }`}>
+                                            {getCategoryLabel(warn.category, language)}
+                                        </span>
+                                        <code className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                            {warn.path}
+                                        </code>
+                                    </div>
                                     <p className="text-sm text-slate-700 dark:text-slate-300">
                                         {getLocalizedMessage(warn, validationT)}
                                     </p>

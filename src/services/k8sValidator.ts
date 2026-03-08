@@ -20,6 +20,7 @@ export interface ValidationError {
     messageKey?: string;  // For i18n lookup
     messageParams?: Record<string, string>;  // For message interpolation
     severity: 'error' | 'warning';
+    category?: 'required' | 'recommendation' | 'production-tip';  // Softer categorization for warnings
 }
 
 export interface ValidationResult {
@@ -70,9 +71,10 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
     if (!resource.metadata.labels || Object.keys(resource.metadata.labels).length === 0) {
         warnings.push({
             path: 'metadata.labels',
-            message: '',  // Will be filled by UI using messageKey
+            message: '',
             messageKey: 'missingLabels',
             severity: 'warning',
+            category: 'recommendation',
         });
     }
 
@@ -84,6 +86,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
             message: '',
             messageKey: 'missingAppLabel',
             severity: 'warning',
+            category: 'recommendation',
         });
     }
 
@@ -101,6 +104,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'missingLimits',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'production-tip',
                 });
             }
             if (!container.resources?.requests) {
@@ -110,6 +114,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'missingRequests',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'production-tip',
                 });
             }
 
@@ -121,6 +126,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'missingProbes',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'production-tip',
                 });
             }
 
@@ -132,6 +138,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'latestTag',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'recommendation',
                 });
             }
         });
@@ -143,6 +150,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                 message: '',
                 messageKey: 'singleReplica',
                 severity: 'warning',
+                category: 'production-tip',
             });
         }
     }
@@ -160,6 +168,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'missingLimits',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'production-tip',
                 });
             }
             if (!container.resources?.requests) {
@@ -169,6 +178,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'missingRequests',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'production-tip',
                 });
             }
 
@@ -180,6 +190,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'missingProbes',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'production-tip',
                 });
             }
 
@@ -191,6 +202,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'latestTag',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'recommendation',
                 });
             }
         });
@@ -202,6 +214,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                 message: '',
                 messageKey: 'singleReplica',
                 severity: 'warning',
+                category: 'production-tip',
             });
         }
     }
@@ -220,6 +233,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                     messageKey: 'latestTag',
                     messageParams: { name: container.name },
                     severity: 'warning',
+                    category: 'recommendation',
                 });
             }
         });
@@ -234,6 +248,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                 message: '',
                 messageKey: 'loadBalancerCost',
                 severity: 'warning',
+                category: 'production-tip',
             });
         }
     }
@@ -247,6 +262,7 @@ const checkBestPractices = (resource: K8sResource): ValidationError[] => {
                 message: '',
                 messageKey: 'missingIngressClass',
                 severity: 'warning',
+                category: 'recommendation',
             });
         }
     }

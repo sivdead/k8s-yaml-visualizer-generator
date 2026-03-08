@@ -7,6 +7,7 @@ import {
     defaultIngress,
     defaultPVC,
     defaultSecret,
+    defaultCronJob,
     defaultStatefulSet,
     defaultHPA
 } from './templates';
@@ -268,6 +269,215 @@ export const TEMPLATES: Template[] = [
                                         }
                                     }
                                 }]
+                            }
+                        }]
+                    }
+                })
+            }
+        ]
+    },
+    {
+        id: 'basic-web-app',
+        name: 'Basic Web App',
+        description: 'A simple web application with Deployment, Service, and Ingress — ready for any HTTP server.',
+        resources: [
+            {
+                type: 'deployment',
+                data: createResource(defaultDeployment, {
+                    metadata: { name: 'web-app', labels: { app: 'web-app' } },
+                    spec: {
+                        replicas: 2,
+                        selector: { matchLabels: { app: 'web-app' } },
+                        template: {
+                            metadata: { labels: { app: 'web-app' } },
+                            spec: {
+                                containers: [{
+                                    name: 'web',
+                                    image: 'nginx:1.27-alpine',
+                                    ports: [{ containerPort: 80 }],
+                                    resources: {
+                                        requests: { cpu: '100m', memory: '128Mi' },
+                                        limits: { cpu: '500m', memory: '256Mi' }
+                                    }
+                                }]
+                            }
+                        }
+                    }
+                })
+            },
+            {
+                type: 'service',
+                data: createResource(defaultService, {
+                    metadata: { name: 'web-app-svc', labels: { app: 'web-app' } },
+                    spec: {
+                        selector: { app: 'web-app' },
+                        ports: [{ port: 80, targetPort: 80 }]
+                    }
+                })
+            },
+            {
+                type: 'ingress',
+                data: createResource(defaultIngress, {
+                    metadata: { name: 'web-app-ingress' },
+                    spec: {
+                        rules: [{
+                            host: 'app.example.com',
+                            http: {
+                                paths: [{
+                                    path: '/',
+                                    pathType: 'Prefix',
+                                    backend: {
+                                        service: {
+                                            name: 'web-app-svc',
+                                            port: { number: 80 }
+                                        }
+                                    }
+                                }]
+                            }
+                        }]
+                    }
+                })
+            }
+        ]
+    },
+    {
+        id: 'api-service',
+        name: 'API Service',
+        description: 'Backend API with ConfigMap for settings, resource limits, and health probes pre-configured.',
+        resources: [
+            {
+                type: 'configmap',
+                data: createResource(defaultConfigMap, {
+                    metadata: { name: 'api-config' },
+                    data: {
+                        "LOG_LEVEL": "info",
+                        "API_RATE_LIMIT": "100"
+                    }
+                })
+            },
+            {
+                type: 'deployment',
+                data: createResource(defaultDeployment, {
+                    metadata: { name: 'api-server', labels: { app: 'api-server' } },
+                    spec: {
+                        replicas: 3,
+                        selector: { matchLabels: { app: 'api-server' } },
+                        template: {
+                            metadata: { labels: { app: 'api-server' } },
+                            spec: {
+                                containers: [{
+                                    name: 'api',
+                                    image: 'my-api:v1.0',
+                                    ports: [{ containerPort: 8080 }],
+                                    env: [
+                                        { name: 'PORT', value: '8080' }
+                                    ],
+                                    resources: {
+                                        requests: { cpu: '250m', memory: '256Mi' },
+                                        limits: { cpu: '1', memory: '512Mi' }
+                                    },
+                                    livenessProbe: {
+                                        httpGet: { path: '/healthz', port: 8080 },
+                                        initialDelaySeconds: 15,
+                                        periodSeconds: 10
+                                    },
+                                    readinessProbe: {
+                                        httpGet: { path: '/ready', port: 8080 },
+                                        initialDelaySeconds: 5,
+                                        periodSeconds: 5
+                                    }
+                                }]
+                            }
+                        }
+                    }
+                })
+            },
+            {
+                type: 'service',
+                data: createResource(defaultService, {
+                    metadata: { name: 'api-service', labels: { app: 'api-server' } },
+                    spec: {
+                        selector: { app: 'api-server' },
+                        ports: [{ port: 80, targetPort: 8080 }]
+                    }
+                })
+            }
+        ]
+    },
+    {
+        id: 'cron-worker',
+        name: 'Cron Worker',
+        description: 'Scheduled batch job that runs periodically — great for backups, syncs, or cleanup tasks.',
+        resources: [
+            {
+                type: 'cronjob',
+                data: createResource(defaultCronJob, {
+                    metadata: { name: 'scheduled-worker', labels: { app: 'scheduled-worker' } },
+                    spec: {
+                        schedule: '0 2 * * *',
+                        jobTemplate: {
+                            spec: {
+                                template: {
+                                    spec: {
+                                        containers: [{
+                                            name: 'worker',
+                                            image: 'alpine:3.20',
+                                            command: ['/bin/sh', '-c', 'echo "Running scheduled task..." && sleep 5']
+                                        }],
+                                        restartPolicy: 'OnFailure'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        ]
+    },
+    {
+        id: 'stateful-app',
+        name: 'Stateful App',
+        description: 'Database-style workload with persistent storage, headless service, and stable pod identity.',
+        resources: [
+            {
+                type: 'service',
+                data: createResource(defaultService, {
+                    metadata: { name: 'db-headless', labels: { app: 'stateful-db' } },
+                    spec: {
+                        selector: { app: 'stateful-db' },
+                        ports: [{ port: 5432, targetPort: 5432 }],
+                        clusterIP: 'None'
+                    }
+                })
+            },
+            {
+                type: 'statefulset',
+                data: createResource(defaultStatefulSet, {
+                    metadata: { name: 'stateful-db', labels: { app: 'stateful-db' } },
+                    spec: {
+                        serviceName: 'db-headless',
+                        replicas: 2,
+                        selector: { matchLabels: { app: 'stateful-db' } },
+                        template: {
+                            metadata: { labels: { app: 'stateful-db' } },
+                            spec: {
+                                containers: [{
+                                    name: 'postgres',
+                                    image: 'postgres:16-alpine',
+                                    ports: [{ containerPort: 5432 }],
+                                    env: [
+                                        { name: 'POSTGRES_DB', value: 'mydb' },
+                                        { name: 'POSTGRES_USER', value: 'admin' }
+                                    ],
+                                    volumeMounts: [{ name: 'data', mountPath: '/var/lib/postgresql/data' }]
+                                }]
+                            }
+                        },
+                        volumeClaimTemplates: [{
+                            metadata: { name: 'data' },
+                            spec: {
+                                accessModes: ['ReadWriteOnce'],
+                                resources: { requests: { storage: '10Gi' } }
                             }
                         }]
                     }

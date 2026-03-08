@@ -81,13 +81,17 @@ const recursiveToYaml = (data: any, indentLevel = 0): string => {
 
     if (Array.isArray(value)) {
       if (value.length === 0) {
-        return `${indent}${key}: []`;
+        // Omit empty arrays for cleaner output
+        return '';
       }
       return `${indent}${key}:\n${recursiveToYaml(value, indentLevel)}`;
     }
 
     if (typeof value === 'object' && value !== null) {
-      if (Object.keys(value).length === 0) return `${indent}${key}: {}`;
+      if (Object.keys(value).length === 0) {
+        // Omit empty objects for cleaner output
+        return '';
+      }
       return `${indent}${key}:\n${recursiveToYaml(value, indentLevel + 1)}`;
     }
 

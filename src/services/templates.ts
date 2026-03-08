@@ -11,7 +11,7 @@ export const defaultDeployment: DeploymentResource = {
     labels: { app: 'my-app' }
   },
   spec: {
-    replicas: 1,
+    replicas: 2,
     selector: {
       matchLabels: { app: 'my-app' }
     },
@@ -20,18 +20,26 @@ export const defaultDeployment: DeploymentResource = {
         labels: { app: 'my-app' }
       },
       spec: {
-        volumes: [],
-        imagePullSecrets: [],
-        initContainers: [],
         containers: [
           {
-            name: 'my-app-container',
-            image: 'nginx:1.25',
-            imagePullPolicy: 'Always',
+            name: 'my-app',
+            image: 'nginx:1.27-alpine',
+            imagePullPolicy: 'IfNotPresent',
             ports: [{ containerPort: 80 }],
-            env: [],
-            lifecycle: {},
-            volumeMounts: []
+            resources: {
+              requests: { cpu: '100m', memory: '128Mi' },
+              limits: { cpu: '500m', memory: '256Mi' }
+            },
+            livenessProbe: {
+              httpGet: { path: '/', port: 80 },
+              initialDelaySeconds: 10,
+              periodSeconds: 10
+            },
+            readinessProbe: {
+              httpGet: { path: '/', port: 80 },
+              initialDelaySeconds: 5,
+              periodSeconds: 5
+            }
           }
         ]
       }
@@ -157,7 +165,7 @@ export const defaultCronJob: CronJobResource = {
             containers: [
               {
                 name: 'my-cronjob-container',
-                image: 'busybox',
+                image: 'busybox:1.36',
                 imagePullPolicy: 'IfNotPresent',
                 command: ['/bin/sh', '-c', 'date; echo Hello from the Kubernetes cluster']
               }
@@ -187,7 +195,7 @@ export const defaultJob: JobResource = {
         containers: [
           {
             name: 'my-job-container',
-            image: 'busybox:latest',
+            image: 'busybox:1.36',
             imagePullPolicy: 'IfNotPresent',
             command: ['/bin/sh', '-c', 'echo "Job completed successfully" && sleep 10']
           }
@@ -218,7 +226,7 @@ export const defaultDaemonSet: DaemonSetResource = {
         containers: [
           {
             name: 'my-daemonset-container',
-            image: 'nginx:latest',
+            image: 'nginx:1.27-alpine',
             imagePullPolicy: 'IfNotPresent',
             ports: [{ containerPort: 80 }]
           }
@@ -250,7 +258,7 @@ export const defaultStatefulSet: StatefulSetResource = {
         containers: [
           {
             name: 'my-statefulset-container',
-            image: 'nginx:latest',
+            image: 'nginx:1.27-alpine',
             imagePullPolicy: 'IfNotPresent',
             ports: [{ containerPort: 80 }]
           }
