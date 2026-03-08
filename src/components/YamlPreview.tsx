@@ -43,6 +43,9 @@ export const YamlPreview: React.FC<YamlPreviewProps> = ({ code, filename }) => {
                     )}
                 </Highlight>
             </div>
+            <div className="flex-shrink-0 px-4 py-2.5 bg-[#252526] border-t border-[#333] text-[11px] text-slate-500">
+                Copy into your repo, CI pipeline, or apply with <code className="text-blue-400">kubectl apply -f</code>
+            </div>
         </div>
     );
 };

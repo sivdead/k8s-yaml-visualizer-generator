@@ -1,0 +1,16 @@
+{
+  "name": "K8s YAML Generator",
+  "short_name": "K8s Gen",
+  "description": "Visual Kubernetes manifest builder. Build deployments, services, and more — no sign-up required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

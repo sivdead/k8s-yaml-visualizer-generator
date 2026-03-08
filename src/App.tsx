@@ -54,6 +54,7 @@ const TemplateModal = lazy(() => import('./components/modals/TemplateModal').the
 const YamlPreview = lazy(() => import('./components/YamlPreview').then(module => ({ default: module.YamlPreview })));
 const ValidationPanel = lazy(() => import('./components/ValidationPanel').then(module => ({ default: module.ValidationPanel })));
 const TopologyView = lazy(() => import('./components/topology').then(module => ({ default: module.TopologyView })));
+const LandingPage = lazy(() => import('./components/LandingPage').then(module => ({ default: module.LandingPage })));
 
 interface SavedConfig {
   id: string;
@@ -819,10 +820,10 @@ const AppContent = () => {
 
             <button
               onClick={() => setIsImportModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
+              className="flex items-center gap-2 px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md text-sm font-medium transition-colors border border-purple-200"
             >
               <Upload size={16} />
-              {t.header.import || "Import"}
+              {t.header.import || "Import YAML"}
             </button>
 
             <button
@@ -842,7 +843,7 @@ const AppContent = () => {
             </button>
             <button
               onClick={() => setIsExportModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-md text-sm font-medium hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
             >
               <Download size={16} />
               {t.header.export}
@@ -1000,7 +1001,11 @@ const App = () => (
   <AppContextProvider>
     <LanguageProvider>
       <Routes>
-        <Route path="/" element={<Navigate to="/deployment" replace />} />
+        <Route path="/" element={
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-500">Loading...</div>}>
+            <LandingPage />
+          </Suspense>
+        } />
         <Route path="/:type" element={<AppContent />} />
       </Routes>
       <ToastContainer />
