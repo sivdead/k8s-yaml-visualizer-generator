@@ -6,7 +6,6 @@ import { ResourceType, K8sResource } from './types';
 import { isDeployment, isService, isConfigMap, isIngress, isPVC, isSecret, isCronJob, isJob, isDaemonSet, isStatefulSet, isHPA } from './utils/typeGuards';
 import { trackEvent } from './utils/analytics';
 import { ToastContainer } from './components/ToastContainer';
-import { SeoContent } from './components/SeoContent';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AppContextProvider, useTheme, useToast } from './contexts/AppContext';
 import { Analytics } from '@vercel/analytics/react';
@@ -871,9 +870,6 @@ const AppContent = () => {
                     {isStatefulSet(formData) && <StatefulSetForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
                     {isHPA(formData) && <HPAForm data={formData} onChange={setFormData} />}
                   </Suspense>
-                </div>
-                <div className={`max-w-3xl mx-auto mt-6 rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                  <SeoContent type={resourceType} />
                 </div>
               </div>
 

@@ -24,6 +24,13 @@ export interface Template {
     }[];
 }
 
+const ensureContainerDefaults = (containers: any[]): any[] => {
+    return containers.map(c => ({
+        imagePullPolicy: 'IfNotPresent',
+        ...c,
+    }));
+};
+
 const createResource = <T extends K8sResource>(base: T, overrides: Partial<T> | any): T => {
     const merged = JSON.parse(JSON.stringify(base));
 
@@ -36,18 +43,31 @@ const createResource = <T extends K8sResource>(base: T, overrides: Partial<T> | 
             merged.spec = { ...merged.spec, ...overrides.spec };
         } else if ((merged.kind === 'Deployment' || merged.kind === 'StatefulSet') && overrides.spec) {
             // Careful merging for nested objects
+            const templateSpec = {
+                ...merged.spec.template.spec,
+                ...overrides.spec?.template?.spec,
+            };
+            if (templateSpec.containers) {
+                templateSpec.containers = ensureContainerDefaults(templateSpec.containers);
+            }
+            if (templateSpec.initContainers) {
+                templateSpec.initContainers = ensureContainerDefaults(templateSpec.initContainers);
+            }
             merged.spec = {
                 ...merged.spec,
                 ...overrides.spec,
                 template: {
                     ...merged.spec.template,
                     ...overrides.spec?.template,
-                    spec: {
-                        ...merged.spec.template.spec,
-                        ...overrides.spec?.template?.spec,
-                    }
+                    spec: templateSpec,
                 }
             };
+        } else if (merged.kind === 'CronJob' && overrides.spec?.jobTemplate) {
+            merged.spec = { ...merged.spec, ...overrides.spec };
+            const jobContainers = merged.spec?.jobTemplate?.spec?.template?.spec?.containers;
+            if (jobContainers) {
+                merged.spec.jobTemplate.spec.template.spec.containers = ensureContainerDefaults(jobContainers);
+            }
         } else {
             merged.spec = { ...merged.spec, ...overrides.spec };
         }
