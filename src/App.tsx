@@ -37,7 +37,8 @@ import {
   Menu,
   MoreVertical,
   Code,
-  Eye
+  Eye,
+  Github
 } from 'lucide-react';
 
 const DeploymentForm = lazy(() => import('./components/forms/DeploymentForm').then(module => ({ default: module.DeploymentForm })));
@@ -868,6 +869,16 @@ const AppContent = () => {
                 {isDark ? <Sun size={16} /> : <Moon size={16} />}
               </button>
 
+              <a
+                href="https://github.com/sivdead/k8s-yaml-visualizer-generator"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-1.5 p-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-slate-300 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
+                title="GitHub"
+              >
+                <Github size={16} />
+              </a>
+
               <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
               <button
@@ -957,6 +968,17 @@ const AppContent = () => {
                     {isDark ? <Sun size={16} /> : <Moon size={16} />}
                     {isDark ? 'Light Mode' : 'Dark Mode'}
                   </button>
+                  <div className={`my-1 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}></div>
+                  <a
+                    href="https://github.com/sivdead/k8s-yaml-visualizer-generator"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsHeaderMenuOpen(false)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <Github size={16} />
+                    GitHub
+                  </a>
                 </div>
               )}
             </div>

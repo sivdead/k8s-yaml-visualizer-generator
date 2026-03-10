@@ -46,6 +46,24 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900'}`}>
+      {/* Top Bar */}
+      <div className={`border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+        <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+          <span className="text-sm font-semibold tracking-tight">K8s YAML Generator</span>
+          <a
+            href="https://github.com/sivdead/k8s-yaml-visualizer-generator"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+              isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <Github size={18} />
+            <span className="hidden sm:inline">GitHub</span>
+          </a>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className={`border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
         <div className="max-w-5xl mx-auto px-6 py-20 text-center">
@@ -321,22 +339,6 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className={`border-t ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-        <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-center">
-          <a
-            href="https://github.com/sivdead/k8s-yaml-visualizer-generator"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
-              isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <Github size={18} />
-            GitHub
-          </a>
-        </div>
-      </footer>
     </div>
   );
 };
