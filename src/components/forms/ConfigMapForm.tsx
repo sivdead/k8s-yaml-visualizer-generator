@@ -43,7 +43,7 @@ export const ConfigMapForm: React.FC<Props> = ({ data, onChange }) => {
         onChange={(comment) => onChange({ ...data, _comment: comment })}
       />
       <SectionTitle title={t.common.metadata} icon={<Box size={20} />} />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label>{t.common.name}</Label>
           <Input

@@ -234,7 +234,7 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange, savedResources 
             />
 
             <CollapsibleSection title={t.common?.metadata || 'Metadata'} icon={<Server size={20} />} defaultOpen={true}>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><Label>{t.common.name}</Label><Input value={data.metadata.name} onChange={(e) => updateMeta('name', e.target.value)} /></div>
                     <div><Label>{t.common.namespace}</Label><Input value={data.metadata.namespace} onChange={(e) => updateMeta('namespace', e.target.value)} /></div>
                 </div>
@@ -348,7 +348,7 @@ export const DaemonSetForm: React.FC<Props> = ({ data, onChange, savedResources 
                         </div>
                     ))}
                     <div className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                             <div><Label>{t.daemonset.volumeName}</Label><Input value={newVolName} onChange={(e) => setNewVolName(e.target.value)} /></div>
                             <div>
                                 <Label>{t.common.type}</Label>

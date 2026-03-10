@@ -152,7 +152,7 @@ export const IngressForm: React.FC<Props> = ({ data, onChange, savedResources = 
         onChange={(comment) => onChange({ ...data, _comment: comment })}
       />
       <SectionTitle title={t.common.metadata} icon={<Globe size={20} />} />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label>{t.common.name}</Label>
           <Input

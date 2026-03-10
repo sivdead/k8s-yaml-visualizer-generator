@@ -303,7 +303,7 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange, savedResources
         onChange={(comment) => onChange({ ...data, _comment: comment })}
       />
       <CollapsibleSection title={t.common.metadata} icon={<Box size={20} />} defaultOpen={true}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label={t.common.name} error={getError('name')} required>
             <ValidatedInput
               value={data.metadata.name}
@@ -341,7 +341,7 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange, savedResources
       </CollapsibleSection>
 
       <CollapsibleSection title={t.deploy.specs} icon={<Layers size={20} />} defaultOpen={true}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div><Label>{t.deploy.replicas}</Label><Input type="number" min={0} value={data.spec.replicas} onChange={(e) => updateSpec('replicas', parseInt(e.target.value) || 1)} /></div>
         </div>
       </CollapsibleSection>
@@ -440,7 +440,7 @@ export const DeploymentForm: React.FC<Props> = ({ data, onChange, savedResources
             </div>
           ))}
           <div className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-            <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
               <div><Label>{t.deploy.volName}</Label><Input value={newVolName} onChange={(e) => setNewVolName(e.target.value)} /></div>
               <div>
                 <Label>{t.deploy.volType}</Label>

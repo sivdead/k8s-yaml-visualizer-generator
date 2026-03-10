@@ -60,7 +60,7 @@ export const PVCForm: React.FC<Props> = ({ data, onChange }) => {
       {/* Metadata */}
       <div>
         <SectionTitle title={t.common.metadata} icon={<Box size={20} />} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>{t.common.name}</Label>
             <Input
@@ -84,7 +84,7 @@ export const PVCForm: React.FC<Props> = ({ data, onChange }) => {
 
         <div className="space-y-4">
           {/* Capacity and Class */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>{t.pvc.request}</Label>
               <Input
