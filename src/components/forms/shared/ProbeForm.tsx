@@ -32,7 +32,7 @@ export const ProbeForm: React.FC<ProbeFormProps> = ({
                 }
                 <h4 className="font-medium text-slate-800 dark:text-slate-200">{title}</h4>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                     <Label>{t.deploy.probeType}</Label>
                     <Select value={type} onChange={(e) => onChange('type', e.target.value)}>
@@ -81,7 +81,7 @@ export const ProbeForm: React.FC<ProbeFormProps> = ({
                     </div>
                     <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
                         {type === 'http' && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <Label>{t.deploy.httpPath}</Label>
                                     <Input

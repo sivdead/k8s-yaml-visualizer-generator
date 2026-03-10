@@ -33,7 +33,11 @@ import {
   Database,
   TrendingUp,
   Network,
-  LayoutGrid
+  LayoutGrid,
+  Menu,
+  MoreVertical,
+  Code,
+  Eye
 } from 'lucide-react';
 
 const DeploymentForm = lazy(() => import('./components/forms/DeploymentForm').then(module => ({ default: module.DeploymentForm })));
@@ -408,6 +412,11 @@ const AppContent = () => {
   const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
+  // Mobile responsive state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
+
   // Resizable Preview State
   const [previewWidth, setPreviewWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
@@ -469,6 +478,24 @@ const AppContent = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isSidebarOpen && !isDesktop) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isSidebarOpen, isDesktop]);
+
+  // Close header menu on outside click
+  useEffect(() => {
+    if (!isHeaderMenuOpen) return;
+    const handleClick = () => setIsHeaderMenuOpen(false);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [isHeaderMenuOpen]);
 
   // Drag Resizing Logic
   const startResizing = useCallback(() => {
@@ -658,12 +685,15 @@ const AppContent = () => {
   const NavItem = ({ type, label, icon: Icon }: { type: ResourceType; label: string; icon: any }) => (
     <NavLink
       to={`/${type}`}
-      onClick={() => trackEvent('resource_nav_click', { from_resource: resourceType, to_resource: type })}
+      onClick={() => {
+        trackEvent('resource_nav_click', { from_resource: resourceType, to_resource: type });
+        setIsSidebarOpen(false);
+      }}
       className={({ isActive }) => `
         w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
         ${isActive
-          ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ? isDark ? 'bg-blue-900/30 text-blue-400 shadow-sm border border-blue-800' : 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100'
+          : isDark ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
         }
       `}
     >
@@ -682,15 +712,36 @@ const AppContent = () => {
     <div className={`min-h-screen flex flex-col md:flex-row font-sans ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
       <SeoHead type={resourceType} />
 
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`w-full md:w-64 border-r flex-shrink-0 flex flex-col h-screen sticky top-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-        <div className="p-6 border-b border-slate-100">
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-72 flex-shrink-0 flex flex-col
+        transform transition-transform duration-200 ease-in-out
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:z-auto md:translate-x-0 md:w-64
+        ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}
+        border-r
+      `}>
+        <div className={`p-6 border-b ${isDark ? 'border-slate-700' : 'border-slate-100'} flex items-center justify-between`}>
           <div className="flex items-center gap-2 text-blue-600">
             <div className="p-2 bg-blue-600 rounded-lg text-white">
               <Box size={24} />
             </div>
-            <span className="font-bold text-xl text-slate-900 tracking-tight">K8s Gen</span>
+            <span className={`font-bold text-xl tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>K8s Gen</span>
           </div>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className={`md:hidden p-1.5 rounded-md transition-colors ${isDark ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-500 hover:bg-slate-100'}`}
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
@@ -723,8 +774,8 @@ const AppContent = () => {
               savedConfigs.map(config => (
                 <div
                   key={config.id}
-                  onClick={() => loadConfig(config)}
-                  className="group flex items-center justify-between px-4 py-2 rounded-md text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
+                  onClick={() => { loadConfig(config); setIsSidebarOpen(false); }}
+                  className={`group flex items-center justify-between px-4 py-2 rounded-md text-xs font-medium cursor-pointer transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
                 >
                   <div className="truncate flex-1">
                     <span className="text-blue-500 font-bold mr-1">[{config.type.slice(0, 3).toUpperCase()}]</span>
@@ -742,7 +793,7 @@ const AppContent = () => {
           </div>
         </nav>
 
-        <div className="p-4 border-t border-slate-200 bg-slate-50">
+        <div className={`p-4 border-t ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
           <div className="text-xs text-slate-400 italic">
             Visual YAML Builder v1.3
           </div>
@@ -752,10 +803,18 @@ const AppContent = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <header className={`border-b p-4 flex justify-between items-center shadow-sm z-10 flex-shrink-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-              <h1 className={`text-xl font-semibold capitalize ${isDark ? 'text-white' : 'text-slate-800'}`}>
+        <header className={`border-b p-3 md:p-4 flex justify-between items-center shadow-sm z-10 flex-shrink-0 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-center gap-2 md:gap-4 min-w-0">
+            {/* Hamburger Menu - mobile only */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className={`md:hidden p-2 rounded-md transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
+            >
+              <Menu size={22} />
+            </button>
+
+            <div className="flex flex-col min-w-0">
+              <h1 className={`text-lg md:text-xl font-semibold capitalize truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>
                 {viewMode === 'form' ? `${t.nav[resourceType]} ${t.header.config}` : (language === 'zh' ? '资源拓扑' : 'Resource Topology')}
               </h1>
               {viewMode === 'form' && (
@@ -766,87 +825,141 @@ const AppContent = () => {
             </div>
 
             {/* View Mode Toggle */}
-            <div className={`flex rounded-lg border overflow-hidden ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+            <div className={`flex rounded-lg border overflow-hidden flex-shrink-0 ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
               <button
                 onClick={() => setViewMode('form')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'form'
+                className={`flex items-center gap-1.5 px-3 py-2 md:py-1.5 text-sm font-medium transition-colors ${viewMode === 'form'
                   ? 'bg-blue-600 text-white'
                   : isDark ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'
                   }`}
               >
                 <LayoutGrid size={14} />
-                {language === 'zh' ? '表单' : 'Form'}
+                <span className="hidden sm:inline">{language === 'zh' ? '表单' : 'Form'}</span>
               </button>
               <button
                 onClick={() => setViewMode('topology')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'topology'
+                className={`flex items-center gap-1.5 px-3 py-2 md:py-1.5 text-sm font-medium transition-colors ${viewMode === 'topology'
                   ? 'bg-blue-600 text-white'
                   : isDark ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'
                   }`}
               >
                 <Network size={14} />
-                {language === 'zh' ? '拓扑' : 'Topology'}
+                <span className="hidden sm:inline">{language === 'zh' ? '拓扑' : 'Topology'}</span>
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-slate-300 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
-            >
-              <Languages size={16} />
-              {language === 'en' ? '中文' : 'English'}
-            </button>
+          <div className="flex items-center gap-1.5 md:gap-3 flex-shrink-0">
+            {/* Desktop-only buttons */}
+            <div className="hidden md:flex items-center gap-3">
+              <button
+                onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-slate-300 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
+              >
+                <Languages size={16} />
+                {language === 'en' ? '中文' : 'English'}
+              </button>
 
-            <button
-              onClick={toggleTheme}
-              className={`flex items-center gap-1.5 p-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-amber-400 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
-              title={isDark ? 'Light Mode' : 'Dark Mode'}
-            >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
+              <button
+                onClick={toggleTheme}
+                className={`flex items-center gap-1.5 p-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-amber-400 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
+                title={isDark ? 'Light Mode' : 'Dark Mode'}
+              >
+                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
 
-            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+              <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
-            <button
-              onClick={() => setIsSaveModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md text-sm font-medium transition-colors border border-blue-100"
-            >
-              <Save size={16} />
-              {t.header.save}
-            </button>
+              <button
+                onClick={() => setIsSaveModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md text-sm font-medium transition-colors border border-blue-100"
+              >
+                <Save size={16} />
+                {t.header.save}
+              </button>
 
-            <button
-              onClick={() => setIsImportModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md text-sm font-medium transition-colors border border-purple-200"
-            >
-              <Upload size={16} />
-              {t.header.import || "Import YAML"}
-            </button>
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md text-sm font-medium transition-colors border border-purple-200"
+              >
+                <Upload size={16} />
+                {t.header.import || "Import YAML"}
+              </button>
 
-            <button
-              onClick={() => setIsTemplateModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
-            >
-              <LayoutGrid size={16} />
-              Templates
-            </button>
+              <button
+                onClick={() => setIsTemplateModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
+              >
+                <LayoutGrid size={16} />
+                Templates
+              </button>
+            </div>
 
+            {/* Always visible: Copy + Export */}
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
+              className={`flex items-center gap-1.5 p-2.5 md:px-3 md:py-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-slate-300 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
             >
               {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-              {copied ? t.header.copied : t.header.copy}
+              <span className="hidden md:inline">{copied ? t.header.copied : t.header.copy}</span>
             </button>
             <button
               onClick={() => setIsExportModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-1.5 p-2.5 md:px-3 md:py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
             >
               <Download size={16} />
-              {t.header.export}
+              <span className="hidden md:inline">{t.header.export}</span>
             </button>
+
+            {/* Mobile overflow menu */}
+            <div className="relative md:hidden" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setIsHeaderMenuOpen(!isHeaderMenuOpen)}
+                className={`p-2.5 rounded-md transition-colors border ${isDark ? 'text-slate-300 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
+              >
+                <MoreVertical size={18} />
+              </button>
+              {isHeaderMenuOpen && (
+                <div className={`absolute right-0 top-full mt-1 w-52 rounded-lg shadow-lg border z-50 py-1 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                  <button
+                    onClick={() => { setIsSaveModalOpen(true); setIsHeaderMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-blue-400 hover:bg-slate-700' : 'text-blue-600 hover:bg-blue-50'}`}
+                  >
+                    <Save size={16} />
+                    {t.header.save}
+                  </button>
+                  <button
+                    onClick={() => { setIsImportModalOpen(true); setIsHeaderMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-purple-400 hover:bg-slate-700' : 'text-purple-600 hover:bg-purple-50'}`}
+                  >
+                    <Upload size={16} />
+                    {t.header.import || "Import YAML"}
+                  </button>
+                  <button
+                    onClick={() => { setIsTemplateModalOpen(true); setIsHeaderMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <LayoutGrid size={16} />
+                    Templates
+                  </button>
+                  <div className={`my-1 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}></div>
+                  <button
+                    onClick={() => { setLanguage(language === 'en' ? 'zh' : 'en'); setIsHeaderMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <Languages size={16} />
+                    {language === 'en' ? '中文' : 'English'}
+                  </button>
+                  <button
+                    onClick={() => { toggleTheme(); setIsHeaderMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-amber-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                    {isDark ? 'Light Mode' : 'Dark Mode'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -854,9 +967,35 @@ const AppContent = () => {
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
           {viewMode === 'form' ? (
             <>
+              {/* Mobile Tab Bar - Form/Preview toggle */}
+              <div className={`flex lg:hidden border-b flex-shrink-0 ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'}`}>
+                <button
+                  onClick={() => setMobileTab('form')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    mobileTab === 'form'
+                      ? 'border-blue-600 text-blue-600'
+                      : `border-transparent ${isDark ? 'text-slate-400' : 'text-slate-500'}`
+                  }`}
+                >
+                  <Code size={16} />
+                  {language === 'zh' ? '表单' : 'Form'}
+                </button>
+                <button
+                  onClick={() => setMobileTab('preview')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    mobileTab === 'preview'
+                      ? 'border-blue-600 text-blue-600'
+                      : `border-transparent ${isDark ? 'text-slate-400' : 'text-slate-500'}`
+                  }`}
+                >
+                  <Eye size={16} />
+                  {language === 'zh' ? '预览' : 'Preview'}
+                </button>
+              </div>
+
               {/* Form Area */}
-              <div className={`flex-1 overflow-y-auto p-6 min-w-[320px] custom-scrollbar ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
-                <div className={`max-w-3xl mx-auto rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+              <div className={`flex-1 overflow-y-auto p-3 md:p-6 min-w-0 lg:min-w-[320px] custom-scrollbar ${!isDesktop && mobileTab !== 'form' ? 'hidden' : ''} ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
+                <div className={`max-w-3xl mx-auto rounded-xl shadow-sm border p-4 md:p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                   <Suspense fallback={formLoadingFallback}>
                     {isDeployment(formData) && <DeploymentForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
                     {isService(formData) && <ServiceForm data={formData} onChange={setFormData} savedResources={savedConfigs.map(c => c.data)} />}
@@ -882,11 +1021,11 @@ const AppContent = () => {
 
               {/* Preview Area */}
               <div
-                className={`flex-shrink-0 flex flex-col overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}
+                className={`flex-shrink-0 flex flex-col overflow-hidden ${!isDesktop && mobileTab !== 'preview' ? 'hidden' : ''} ${!isDesktop ? 'flex-1' : ''} ${isDark ? 'bg-slate-800' : 'bg-white'}`}
                 style={{ width: isDesktop ? previewWidth : '100%' }}
               >
                 {/* Validation Panel */}
-                <div className="flex-shrink-0 p-3 border-b border-slate-200 dark:border-slate-700">
+                <div className={`flex-shrink-0 p-3 border-b ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                   <Suspense fallback={<div className="text-sm text-slate-500">Loading validation...</div>}>
                     <ValidationPanel resource={formData} showDetails={true} />
                   </Suspense>

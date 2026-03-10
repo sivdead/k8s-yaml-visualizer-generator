@@ -11,7 +11,7 @@ interface YamlPreviewProps {
  */
 export const YamlPreview: React.FC<YamlPreviewProps> = ({ code, filename }) => {
     return (
-        <div className="w-full bg-[#1e1e1e] flex flex-col border-l border-slate-800 shadow-xl h-full">
+        <div className="w-full bg-[#1e1e1e] flex flex-col lg:border-l border-slate-800 shadow-xl h-full">
             <div className="p-3 bg-[#252526] text-slate-400 text-xs font-mono border-b border-[#333] flex justify-between items-center flex-shrink-0">
                 <span>PREVIEW: {filename}</span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-blue-900 text-blue-200">YAML</span>
