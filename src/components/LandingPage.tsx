@@ -26,6 +26,7 @@ import {
   Github
 } from 'lucide-react';
 import { useTheme } from '../contexts/AppContext';
+import { trackEvent } from '../utils/analytics';
 
 const RESOURCE_TYPES = [
   { type: 'deployment', label: 'Deployment', icon: Layers, desc: 'Stateless workloads with rolling updates' },
@@ -82,6 +83,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               to="/deployment"
+              onClick={() => trackEvent('landing_cta_click', { cta: 'hero_start_building' })}
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
             >
               Start Building
@@ -246,7 +248,7 @@ export const LandingPage: React.FC = () => {
               <div key={i} className={`p-6 rounded-xl border ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
                 <h3 className="font-semibold mb-2">{item.title}</h3>
                 <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{item.desc}</p>
-                <Link to={`/${item.cta}`} className="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1">
+                <Link to={`/${item.cta}`} onClick={() => trackEvent('landing_cta_click', { cta: 'use_case', use_case: item.title })} className="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1">
                   Try it <ArrowRight size={14} />
                 </Link>
               </div>
@@ -305,6 +307,7 @@ export const LandingPage: React.FC = () => {
               <Link
                 key={r.type}
                 to={`/${r.type}`}
+                onClick={() => trackEvent('landing_resource_click', { resource_type: r.type })}
                 className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
                   isDark
                     ? 'border-slate-700 bg-slate-800/50 hover:border-blue-600 hover:bg-slate-800'
@@ -331,6 +334,7 @@ export const LandingPage: React.FC = () => {
           </p>
           <Link
             to="/deployment"
+            onClick={() => trackEvent('landing_cta_click', { cta: 'footer_start_deployment' })}
             className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
           >
             Start with Deployment

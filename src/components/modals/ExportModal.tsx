@@ -3,6 +3,7 @@ import { K8sResource, ResourceType } from '../../types';
 import { toYaml, downloadYaml } from '../../services/yamlUtils';
 import { X, Download, Check, Copy, FileDown } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { trackEvent } from '../../utils/analytics';
 
 interface SavedConfig {
     id: string;
@@ -68,6 +69,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         navigator.clipboard.writeText(generateCombinedYaml());
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        trackEvent('export_copy', { resource_count: selectedIds.size });
     };
 
     const handleDownload = () => {
@@ -77,6 +79,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             ? `${currentConfig.metadata.name}.yaml`
             : `k8s-resources-${count}.yaml`;
         downloadYaml(filename, combinedYaml);
+        trackEvent('export_download', { resource_count: count, filename });
     };
 
     const getTypeLabel = (type: ResourceType): string => {
