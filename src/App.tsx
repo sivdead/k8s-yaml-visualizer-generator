@@ -645,7 +645,9 @@ const AppContent = () => {
 
   const deleteConfig = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const config = savedConfigs.find(c => c.id === id);
     setSavedConfigs(savedConfigs.filter(c => c.id !== id));
+    trackEvent('config_delete', { resource_type: config?.type || 'unknown' });
   };
 
   const handleLoadTemplate = (resources: { type: ResourceType; data: K8sResource }[]) => {
@@ -828,7 +830,7 @@ const AppContent = () => {
             {/* View Mode Toggle */}
             <div className={`flex rounded-lg border overflow-hidden flex-shrink-0 ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
               <button
-                onClick={() => setViewMode('form')}
+                onClick={() => { setViewMode('form'); trackEvent('view_mode_switch', { mode: 'form', resource_type: resourceType }); }}
                 className={`flex items-center gap-1.5 px-3 py-2 md:py-1.5 text-sm font-medium transition-colors ${viewMode === 'form'
                   ? 'bg-blue-600 text-white'
                   : isDark ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'
@@ -838,7 +840,7 @@ const AppContent = () => {
                 <span className="hidden sm:inline">{language === 'zh' ? '表单' : 'Form'}</span>
               </button>
               <button
-                onClick={() => setViewMode('topology')}
+                onClick={() => { setViewMode('topology'); trackEvent('view_mode_switch', { mode: 'topology', resource_type: resourceType }); }}
                 className={`flex items-center gap-1.5 px-3 py-2 md:py-1.5 text-sm font-medium transition-colors ${viewMode === 'topology'
                   ? 'bg-blue-600 text-white'
                   : isDark ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'
@@ -854,7 +856,7 @@ const AppContent = () => {
             {/* Desktop-only buttons */}
             <div className="hidden md:flex items-center gap-3">
               <button
-                onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+                onClick={() => { const newLang = language === 'en' ? 'zh' : 'en'; setLanguage(newLang); trackEvent('language_switch', { from: language, to: newLang }); }}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-slate-300 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
               >
                 <Languages size={16} />
@@ -862,7 +864,7 @@ const AppContent = () => {
               </button>
 
               <button
-                onClick={toggleTheme}
+                onClick={() => { toggleTheme(); trackEvent('theme_toggle', { from: isDark ? 'dark' : 'light', to: isDark ? 'light' : 'dark' }); }}
                 className={`flex items-center gap-1.5 p-2 rounded-md text-sm font-medium transition-colors border ${isDark ? 'text-amber-400 hover:bg-slate-700 border-slate-600' : 'text-slate-600 hover:bg-slate-100 border-slate-200'}`}
                 title={isDark ? 'Light Mode' : 'Dark Mode'}
               >
@@ -882,7 +884,7 @@ const AppContent = () => {
               <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
               <button
-                onClick={() => setIsSaveModalOpen(true)}
+                onClick={() => { setIsSaveModalOpen(true); trackEvent('modal_open', { modal: 'save', resource_type: resourceType }); }}
                 className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-md text-sm font-medium transition-colors border border-blue-100"
               >
                 <Save size={16} />
@@ -890,7 +892,7 @@ const AppContent = () => {
               </button>
 
               <button
-                onClick={() => setIsImportModalOpen(true)}
+                onClick={() => { setIsImportModalOpen(true); trackEvent('modal_open', { modal: 'import' }); }}
                 className="flex items-center gap-2 px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-md text-sm font-medium transition-colors border border-purple-200"
               >
                 <Upload size={16} />
@@ -898,7 +900,7 @@ const AppContent = () => {
               </button>
 
               <button
-                onClick={() => setIsTemplateModalOpen(true)}
+                onClick={() => { setIsTemplateModalOpen(true); trackEvent('modal_open', { modal: 'template' }); }}
                 className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-md text-sm font-medium transition-colors border border-slate-200"
               >
                 <LayoutGrid size={16} />
@@ -915,7 +917,7 @@ const AppContent = () => {
               <span className="hidden md:inline">{copied ? t.header.copied : t.header.copy}</span>
             </button>
             <button
-              onClick={() => setIsExportModalOpen(true)}
+              onClick={() => { setIsExportModalOpen(true); trackEvent('modal_open', { modal: 'export', resource_type: resourceType }); }}
               className="flex items-center gap-1.5 p-2.5 md:px-3 md:py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
             >
               <Download size={16} />
@@ -933,21 +935,21 @@ const AppContent = () => {
               {isHeaderMenuOpen && (
                 <div className={`absolute right-0 top-full mt-1 w-52 rounded-lg shadow-lg border z-50 py-1 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                   <button
-                    onClick={() => { setIsSaveModalOpen(true); setIsHeaderMenuOpen(false); }}
+                    onClick={() => { setIsSaveModalOpen(true); trackEvent('modal_open', { modal: 'save', resource_type: resourceType }); setIsHeaderMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-blue-400 hover:bg-slate-700' : 'text-blue-600 hover:bg-blue-50'}`}
                   >
                     <Save size={16} />
                     {t.header.save}
                   </button>
                   <button
-                    onClick={() => { setIsImportModalOpen(true); setIsHeaderMenuOpen(false); }}
+                    onClick={() => { setIsImportModalOpen(true); trackEvent('modal_open', { modal: 'import' }); setIsHeaderMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-purple-400 hover:bg-slate-700' : 'text-purple-600 hover:bg-purple-50'}`}
                   >
                     <Upload size={16} />
                     {t.header.import || "Import YAML"}
                   </button>
                   <button
-                    onClick={() => { setIsTemplateModalOpen(true); setIsHeaderMenuOpen(false); }}
+                    onClick={() => { setIsTemplateModalOpen(true); trackEvent('modal_open', { modal: 'template' }); setIsHeaderMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
                   >
                     <LayoutGrid size={16} />
@@ -955,14 +957,14 @@ const AppContent = () => {
                   </button>
                   <div className={`my-1 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}></div>
                   <button
-                    onClick={() => { setLanguage(language === 'en' ? 'zh' : 'en'); setIsHeaderMenuOpen(false); }}
+                    onClick={() => { const newLang = language === 'en' ? 'zh' : 'en'; setLanguage(newLang); trackEvent('language_switch', { from: language, to: newLang }); setIsHeaderMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
                   >
                     <Languages size={16} />
                     {language === 'en' ? '中文' : 'English'}
                   </button>
                   <button
-                    onClick={() => { toggleTheme(); setIsHeaderMenuOpen(false); }}
+                    onClick={() => { toggleTheme(); trackEvent('theme_toggle', { from: isDark ? 'dark' : 'light', to: isDark ? 'light' : 'dark' }); setIsHeaderMenuOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isDark ? 'text-amber-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-100'}`}
                   >
                     {isDark ? <Sun size={16} /> : <Moon size={16} />}
@@ -992,7 +994,7 @@ const AppContent = () => {
               {/* Mobile Tab Bar - Form/Preview toggle */}
               <div className={`flex lg:hidden border-b flex-shrink-0 ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'}`}>
                 <button
-                  onClick={() => setMobileTab('form')}
+                  onClick={() => { setMobileTab('form'); trackEvent('mobile_tab_switch', { tab: 'form' }); }}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
                     mobileTab === 'form'
                       ? 'border-blue-600 text-blue-600'
@@ -1003,7 +1005,7 @@ const AppContent = () => {
                   {language === 'zh' ? '表单' : 'Form'}
                 </button>
                 <button
-                  onClick={() => setMobileTab('preview')}
+                  onClick={() => { setMobileTab('preview'); trackEvent('mobile_tab_switch', { tab: 'preview' }); }}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${
                     mobileTab === 'preview'
                       ? 'border-blue-600 text-blue-600'
